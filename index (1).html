@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DITRA-PONAL | Reconstrucción de Accidentes</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Teko:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --verde: #00ff88;
+    --azul: #0af;
+    --rojo: #ff3b3b;
+    --amarillo: #ffd600;
+    --bg: #050a0f;
+    --panel: #0a1520;
+    --panel2: #0d1c2e;
+    --borde: #1a3a5a;
+    --texto: #c8dff0;
+    --blanco: #eaf6ff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--texto);font-family:'Rajdhani',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+  /* GRID BG */
+  body::before{
+    content:'';position:fixed;inset:0;
+    background-image:
+      linear-gradient(rgba(0,170,255,.04) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,170,255,.04) 1px,transparent 1px);
+    background-size:40px 40px;
+    pointer-events:none;z-index:0;
+  }
+
+  /* HEADER */
+  header{
+    background:linear-gradient(90deg,#000d1a,#001428,#000d1a);
+    border-bottom:2px solid var(--azul);
+    padding:12px 30px;display:flex;align-items:center;gap:20px;
+    position:relative;z-index:10;
+    box-shadow:0 0 30px rgba(0,170,255,.3);
+  }
+  .escudo{font-size:2.2rem;}
+  .header-title h1{font-family:'Teko',sans-serif;font-size:1.8rem;color:var(--azul);letter-spacing:3px;text-transform:uppercase;line-height:1;}
+  .header-title p{font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--verde);letter-spacing:2px;}
+  .badge{margin-left:auto;background:var(--rojo);color:#fff;font-family:'Share Tech Mono',monospace;font-size:.65rem;padding:4px 10px;border-radius:3px;letter-spacing:2px;animation:blink 1.5s infinite;}
+  @keyframes blink{0%,100%{opacity:1;}50%{opacity:.5;}}
+
+  /* MAIN */
+  main{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:20px;}
+
+  /* SCREEN SYSTEM */
+  .screen{display:none;animation:fadein .4s;}
+  .screen.active{display:block;}
+  @keyframes fadein{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+
+  /* INTRO */
+  .intro-hero{text-align:center;padding:40px 20px;}
+  .intro-hero h2{font-family:'Teko',sans-serif;font-size:3.5rem;color:var(--blanco);letter-spacing:4px;text-shadow:0 0 20px var(--azul);}
+  .intro-hero .sub{font-family:'Share Tech Mono',monospace;color:var(--verde);font-size:.85rem;letter-spacing:3px;margin:8px 0 30px;}
+  
+  .scenario-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin:30px 0;}
+  .card{
+    background:var(--panel);border:1px solid var(--borde);border-radius:8px;padding:25px;
+    cursor:pointer;transition:.3s;position:relative;overflow:hidden;
+  }
+  .card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,170,255,.05),transparent);opacity:0;transition:.3s;}
+  .card:hover{border-color:var(--azul);box-shadow:0 0 25px rgba(0,170,255,.2);transform:translateY(-3px);}
+  .card:hover::before{opacity:1;}
+  .card-icon{font-size:2.5rem;margin-bottom:12px;}
+  .card h3{font-family:'Teko',sans-serif;font-size:1.5rem;color:var(--azul);letter-spacing:2px;}
+  .card .method{font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--verde);margin:5px 0 10px;letter-spacing:1px;}
+  .card p{font-size:.9rem;line-height:1.5;color:#8ab;}
+  .card .diff{margin-top:15px;display:flex;gap:5px;}
+  .dot{width:12px;height:12px;border-radius:50%;background:var(--borde);}
+  .dot.on{background:var(--verde);}
+
+  /* GAME AREA */
+  .game-header{
+    background:var(--panel);border:1px solid var(--borde);border-radius:8px;
+    padding:15px 20px;display:flex;align-items:center;gap:15px;margin-bottom:20px;
+    flex-wrap:wrap;
+  }
+  .game-title{font-family:'Teko',sans-serif;font-size:1.6rem;color:var(--azul);letter-spacing:2px;flex:1;}
+  .hud{display:flex;gap:15px;flex-wrap:wrap;}
+  .hud-item{background:var(--bg);border:1px solid var(--borde);border-radius:5px;padding:6px 14px;text-align:center;}
+  .hud-label{font-family:'Share Tech Mono',monospace;font-size:.55rem;color:#567;letter-spacing:2px;display:block;}
+  .hud-val{font-family:'Share Tech Mono',monospace;font-size:1rem;color:var(--amarillo);}
+
+  /* SCENE */
+  .scene-box{
+    background:var(--panel);border:1px solid var(--borde);border-radius:8px;
+    padding:20px;margin-bottom:20px;
+  }
+  .scene-title{font-family:'Teko',sans-serif;font-size:1.1rem;color:var(--verde);letter-spacing:3px;margin-bottom:15px;display:flex;align-items:center;gap:10px;}
+  .scene-title::after{content:'';flex:1;height:1px;background:var(--borde);}
+
+  /* ROAD SCENE SVG */
+  .road-container{background:#0a1008;border:1px solid #1a3a1a;border-radius:6px;padding:10px;margin:15px 0;overflow:hidden;}
+  
+  /* DATA GRID */
+  .data-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:15px 0;}
+  .data-item{
+    background:var(--bg);border:1px solid var(--borde);border-radius:6px;
+    padding:12px;
+  }
+  .data-item label{font-family:'Share Tech Mono',monospace;font-size:.6rem;color:#567;letter-spacing:2px;display:block;margin-bottom:5px;}
+  .data-item .val{font-family:'Share Tech Mono',monospace;font-size:1.1rem;color:var(--azul);}
+  .data-item .unit{font-size:.7rem;color:#567;margin-left:4px;}
+
+  /* STEPS */
+  .steps-container{display:flex;flex-direction:column;gap:15px;}
+  .step{
+    background:var(--panel2);border:1px solid var(--borde);border-radius:8px;padding:20px;
+    transition:.3s;
+  }
+  .step.active-step{border-color:var(--azul);box-shadow:0 0 15px rgba(0,170,255,.15);}
+  .step.done{border-color:var(--verde);opacity:.7;}
+  .step.locked{opacity:.4;pointer-events:none;}
+  .step-header{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+  .step-num{
+    width:32px;height:32px;border-radius:50%;background:var(--borde);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Share Tech Mono',monospace;font-size:.85rem;color:var(--azul);
+    flex-shrink:0;
+  }
+  .step.active-step .step-num{background:var(--azul);color:#000;}
+  .step.done .step-num{background:var(--verde);color:#000;}
+  .step-title{font-family:'Teko',sans-serif;font-size:1.1rem;color:var(--blanco);letter-spacing:1px;}
+  .formula{
+    background:var(--bg);border:1px solid #1a2a3a;border-radius:5px;
+    padding:10px 15px;font-family:'Share Tech Mono',monospace;
+    font-size:.85rem;color:var(--amarillo);margin:10px 0;
+    border-left:3px solid var(--amarillo);
+  }
+  
+  /* INPUT ROW */
+  .input-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;}
+  .input-row label{font-family:'Share Tech Mono',monospace;font-size:.7rem;color:#8ab;min-width:200px;}
+  .calc-input{
+    background:var(--bg);border:1px solid var(--borde);border-radius:5px;
+    padding:8px 12px;color:var(--blanco);font-family:'Share Tech Mono',monospace;
+    font-size:1rem;width:140px;transition:.3s;
+  }
+  .calc-input:focus{outline:none;border-color:var(--azul);box-shadow:0 0 10px rgba(0,170,255,.2);}
+  .unit-label{font-family:'Share Tech Mono',monospace;font-size:.75rem;color:#567;}
+
+  /* BUTTONS */
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:10px 22px;border-radius:5px;border:none;cursor:pointer;
+    font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:600;
+    letter-spacing:1px;transition:.25s;text-transform:uppercase;
+  }
+  .btn-primary{background:var(--azul);color:#000;}
+  .btn-primary:hover{background:#29bfff;box-shadow:0 0 15px rgba(0,170,255,.4);}
+  .btn-success{background:var(--verde);color:#000;}
+  .btn-success:hover{background:#29ffaa;box-shadow:0 0 15px rgba(0,255,136,.4);}
+  .btn-ghost{background:transparent;color:var(--texto);border:1px solid var(--borde);}
+  .btn-ghost:hover{border-color:var(--azul);color:var(--azul);}
+  .btn-danger{background:var(--rojo);color:#fff;}
+  
+  /* FEEDBACK */
+  .feedback{
+    border-radius:6px;padding:12px 16px;margin:10px 0;
+    font-family:'Share Tech Mono',monospace;font-size:.8rem;
+    display:none;
+  }
+  .feedback.show{display:block;animation:fadein .3s;}
+  .feedback.ok{background:rgba(0,255,136,.1);border:1px solid var(--verde);color:var(--verde);}
+  .feedback.err{background:rgba(255,59,59,.1);border:1px solid var(--rojo);color:var(--rojo);}
+  .feedback.hint{background:rgba(255,214,0,.1);border:1px solid var(--amarillo);color:var(--amarillo);}
+
+  /* PROGRESS BAR */
+  .progress-bar{height:4px;background:var(--borde);border-radius:2px;margin:5px 0;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--azul),var(--verde));border-radius:2px;transition:.6s;}
+
+  /* RESULTS */
+  .results-panel{
+    background:var(--panel);border:2px solid var(--verde);border-radius:8px;padding:30px;
+    text-align:center;
+  }
+  .results-panel h2{font-family:'Teko',sans-serif;font-size:2.5rem;color:var(--verde);letter-spacing:3px;}
+  .results-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin:25px 0;}
+  .result-box{
+    background:var(--bg);border:1px solid var(--borde);border-radius:8px;padding:20px;
+  }
+  .result-box .r-label{font-family:'Share Tech Mono',monospace;font-size:.6rem;color:#567;letter-spacing:2px;margin-bottom:8px;}
+  .result-box .r-val{font-family:'Teko',sans-serif;font-size:2.2rem;color:var(--azul);}
+  .result-box .r-unit{font-size:1rem;color:#567;}
+  .result-box.highlight{border-color:var(--verde);}
+  .result-box.highlight .r-val{color:var(--verde);}
+
+  /* SCORE STARS */
+  .stars{font-size:2rem;margin:15px 0;letter-spacing:5px;}
+
+  /* TOOLTIP */
+  .tip{display:inline-block;width:18px;height:18px;border-radius:50%;background:rgba(0,170,255,.2);border:1px solid var(--azul);color:var(--azul);font-size:.7rem;text-align:center;line-height:16px;cursor:help;vertical-align:middle;margin-left:6px;}
+  
+  /* RANGE SLIDER */
+  .range-group{display:flex;align-items:center;gap:10px;}
+  input[type=range]{-webkit-appearance:none;width:120px;height:4px;background:var(--borde);border-radius:2px;outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--azul);cursor:pointer;}
+  .range-val{font-family:'Share Tech Mono',monospace;font-size:.9rem;color:var(--amarillo);min-width:40px;}
+
+  /* MOBILE */
+  @media(max-width:600px){
+    .intro-hero h2{font-size:2.2rem;}
+    .game-header{gap:10px;}
+    .hud{gap:8px;}
+    .input-row{flex-direction:column;align-items:flex-start;}
+    .calc-input{width:100%;}
+  }
+  
+  /* NAV TABS */
+  .tabs{display:flex;gap:2px;margin-bottom:20px;background:var(--bg);border-radius:6px;padding:4px;border:1px solid var(--borde);}
+  .tab{
+    flex:1;padding:8px;text-align:center;border-radius:4px;cursor:pointer;
+    font-family:'Rajdhani',sans-serif;font-weight:600;font-size:.9rem;letter-spacing:1px;
+    transition:.2s;color:#567;
+  }
+  .tab.active{background:var(--azul);color:#000;}
+
+  /* EXPLANATION BOX */
+  .explain{
+    background:rgba(0,170,255,.05);border:1px solid rgba(0,170,255,.2);
+    border-radius:6px;padding:15px;margin:12px 0;font-size:.85rem;line-height:1.7;color:#9bc;
+  }
+  .explain strong{color:var(--azul);}
+
+  /* MINI MAP */
+  .mini-map{position:relative;width:100%;height:120px;background:#111a0a;border-radius:6px;overflow:hidden;border:1px solid #1a3a1a;}
+  .road{position:absolute;top:50%;left:0;right:0;height:28px;background:#2a2a2a;transform:translateY(-50%);}
+  .road-line{position:absolute;top:50%;left:0;right:0;height:2px;background:repeating-linear-gradient(90deg,#ffd600 0,#ffd600 20px,transparent 20px,transparent 40px);transform:translateY(-50%);}
+  .car-icon{position:absolute;font-size:1.4rem;top:50%;transform:translateY(-60%);}
+  .pedestrian-icon{position:absolute;font-size:1.2rem;}
+  .label-map{position:absolute;font-family:'Share Tech Mono',monospace;font-size:.55rem;color:var(--verde);}
+  .dim-line{position:absolute;border-top:1px dashed rgba(0,255,136,.4);}
+  .dim-label{position:absolute;font-family:'Share Tech Mono',monospace;font-size:.5rem;color:var(--amarillo);}
+
+  /* CONFETTI placeholder */
+  #confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:999;}
+</style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<header>
+  <div class="escudo">🚔</div>
+  <div class="header-title">
+    <h1>DITRA-PONAL</h1>
+    <p>// FÍSICA APLICADA A RECONSTRUCCIÓN DE ACCIDENTES DE TRÁNSITO</p>
+  </div>
+  <div class="badge">⚠ ENTRENAMIENTO</div>
+</header>
+
+<main>
+
+<!-- SCREEN: INTRO -->
+<div class="screen active" id="screen-intro">
+  <div class="intro-hero">
+    <div style="font-size:3rem;margin-bottom:10px;">🔬</div>
+    <h2>MÓDULO DE SIMULACIÓN</h2>
+    <p class="sub">// RECONSTRUCCIÓN CINEMÁTICA — ENTRADA VIRTUAL 8</p>
+    <p style="max-width:600px;margin:0 auto;color:#8ab;line-height:1.6;font-size:1rem;">
+      Aplica los modelos matemáticos de Searle y Happer para calcular velocidades de impacto 
+      a partir de evidencias físicas en la escena del accidente.
+    </p>
+  </div>
+
+  <div class="scenario-cards">
+    <div class="card" onclick="startGame('searle')">
+      <div class="card-icon">🚶</div>
+      <h3>TALLER 1 — SEARLE</h3>
+      <p class="method">MÉTODO: PROYECCIÓN + HUELLAS DE FRENADO</p>
+      <p>Calcula Vp (velocidad de proyección del peatón), Vc (impacto del vehículo) y Vt (velocidad de tránsito) con el modelo cinemático de distancia de lanzamiento.</p>
+      <div class="diff">
+        <div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot"></div>
+        <span style="font-size:.75rem;color:#567;margin-left:5px;">INTERMEDIO</span>
+      </div>
+    </div>
+
+    <div class="card" onclick="startGame('happer')">
+      <div class="card-icon">🚗</div>
+      <h3>TALLER 2 — HAPPER</h3>
+      <p class="method">MÉTODO: REGRESIÓN LINEAL EMPÍRICA</p>
+      <p>Estima Vc con la ecuación empírica de Happer basada en la distancia de lanzamiento s, luego calcula Vt con las huellas de frenado.</p>
+      <div class="diff">
+        <div class="dot on"></div><div class="dot on"></div><div class="dot"></div><div class="dot"></div>
+        <span style="font-size:.75rem;color:#567;margin-left:5px;">BÁSICO</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:var(--panel);border:1px solid var(--borde);border-radius:8px;padding:20px;margin-top:10px;">
+    <div class="scene-title">DATOS DE ESCENA COMUNES (Av. Calle 26 — Bogotá)</div>
+    <div class="data-grid">
+      <div class="data-item"><label>CALZADA</label><span class="val">Concreto</span> <span class="unit">usado/plano</span></div>
+      <div class="data-item"><label>VEHÍCULO</label><span class="val">Chevrolet Swift</span> <span class="unit">1.0</span></div>
+      <div class="data-item"><label>MASA VEHÍCULO</label><span class="val">1365</span> <span class="unit">kg (con conductor)</span></div>
+      <div class="data-item"><label>MASA PEATÓN</label><span class="val">65</span> <span class="unit">kg</span></div>
+      <div class="data-item"><label>TALLA PEATÓN</label><span class="val">1.65</span> <span class="unit">m</span></div>
+      <div class="data-item"><label>PENDIENTE (φ)</label><span class="val">0°</span> <span class="unit">vía plana</span></div>
+      <div class="data-item"><label>g</label><span class="val">9.8</span> <span class="unit">m/s²</span></div>
+      <div class="data-item"><label>HUELLAS FRENADO (d_hf)</label><span class="val">16.5</span> <span class="unit">m</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: GAME SEARLE -->
+<div class="screen" id="screen-searle">
+  <div class="game-header">
+    <div class="game-title">🔬 TALLER 1 — MÉTODO SEARLE</div>
+    <div class="hud">
+      <div class="hud-item"><span class="hud-label">PUNTOS</span><span class="hud-val" id="s-score">0</span></div>
+      <div class="hud-item"><span class="hud-label">PASO</span><span class="hud-val" id="s-step-ind">1/4</span></div>
+      <div class="hud-item"><span class="hud-label">INTENTOS</span><span class="hud-val" id="s-attempts">3</span></div>
+    </div>
+    <button class="btn btn-ghost" onclick="goHome()">← INICIO</button>
+  </div>
+
+  <div class="progress-bar"><div class="progress-fill" id="s-progress" style="width:0%"></div></div>
+
+  <!-- MINI SCENE -->
+  <div class="scene-box">
+    <div class="scene-title">📍 PLANO DE LA ESCENA</div>
+    <div class="mini-map" id="scene-map">
+      <div class="road"></div>
+      <div class="road-line"></div>
+      <!-- bridge indicator -->
+      <div style="position:absolute;left:5%;top:0;bottom:0;width:20px;background:rgba(100,150,255,.15);border-right:1px solid #4af;"></div>
+      <div class="label-map" style="left:2%;top:5px;">Puente</div>
+      <!-- PR punto de referencia -->
+      <div class="label-map" style="right:5%;top:5px;color:var(--rojo);">PR</div>
+      <!-- PI punto impacto -->
+      <div id="pi-dot" style="position:absolute;left:52%;top:50%;transform:translate(-50%,-50%);font-size:.8rem;color:var(--verde);">●PI</div>
+      <!-- Car -->
+      <div class="car-icon" id="car-anim" style="left:55%;">🚗</div>
+      <!-- pedestrian final -->
+      <div id="ped-icon" style="position:absolute;left:22%;top:35%;font-size:1rem;">🚶</div>
+      <!-- distances -->
+      <div class="dim-line" style="bottom:15px;left:23%;width:30%;"></div>
+      <div class="dim-label" style="bottom:4px;left:33%;">s = 9.17 m</div>
+      <div class="dim-line" style="bottom:30px;left:55%;width:28%;"></div>
+      <div class="dim-label" style="bottom:19px;left:64%;">d_hf = 16.5 m</div>
+    </div>
+    <div class="data-grid" style="margin-top:12px;">
+      <div class="data-item"><label>DISTANCIA LANZAMIENTO (s)</label><span class="val">9.17</span><span class="unit">m</span></div>
+      <div class="data-item"><label>f_p MÍNIMO</label><span class="val">0.66</span></div>
+      <div class="data-item"><label>f_p MÁXIMO</label><span class="val">0.79</span></div>
+      <div class="data-item"><label>VEHÍCULO (frente bajo)</label><span class="val">E_p = 0.689</span></div>
+      <div class="data-item"><label>ADULTO</label><span class="val">E_p = 0.813</span></div>
+      <div class="data-item"><label>d_hf HUELLAS FRENADO</label><span class="val">16.5</span><span class="unit">m</span></div>
+    </div>
+  </div>
+
+  <div class="steps-container" id="searle-steps">
+
+    <!-- STEP 1: Vp mínimo -->
+    <div class="step active-step" id="ss1">
+      <div class="step-header">
+        <div class="step-num">1</div>
+        <div class="step-title">CALCULAR Vp MÍNIMO (f_p = 0.66)</div>
+      </div>
+      <div class="explain">
+        La velocidad mínima de proyección del peatón usa el <strong>coeficiente de fricción mínimo</strong> 
+        del pavimento (f_p = 0.66) y la distancia de lanzamiento s = 9.17 m.
+      </div>
+      <div class="formula">Vp = √(2 × g × f_p × s) / √(1 + f_p²)   [m/s]</div>
+      <div class="explain">
+        Sustituye: Vp = √(2 × 9.8 × 0.66 × 9.17) / √(1 + 0.66²)<br>
+        Numerador bajo √: <strong>2 × 9.8 × 0.66 × 9.17 = ?</strong><br>
+        Denominador bajo √: <strong>1 + 0.66² = ?</strong>
+      </div>
+      <div class="input-row">
+        <label>Vp_min = <span style="color:#ffd600">?</span> m/s (2 decimales)</label>
+        <input type="number" class="calc-input" id="in-vp-min" step="0.01" placeholder="ej: 9.09">
+        <span class="unit-label">m/s</span>
+        <button class="btn btn-primary" onclick="checkStep('s1')">✓ VERIFICAR</button>
+      </div>
+      <div class="feedback" id="fb-s1"></div>
+    </div>
+
+    <!-- STEP 2: Vp máximo -->
+    <div class="step locked" id="ss2">
+      <div class="step-header">
+        <div class="step-num">2</div>
+        <div class="step-title">CALCULAR Vp MÁXIMO (f_p = 0.79)</div>
+      </div>
+      <div class="formula">Vp = √(2 × g × f_p × s) / √(1 + f_p²)   [m/s]</div>
+      <div class="explain">Repite el cálculo con f_p = 0.79 y s = 9.17 m</div>
+      <div class="input-row">
+        <label>Vp_max = <span style="color:#ffd600">?</span> m/s</label>
+        <input type="number" class="calc-input" id="in-vp-max" step="0.01" placeholder="ej: 9.36">
+        <button class="btn btn-primary" onclick="checkStep('s2')">✓ VERIFICAR</button>
+      </div>
+      <div class="feedback" id="fb-s2"></div>
+    </div>
+
+    <!-- STEP 3: Vc -->
+    <div class="step locked" id="ss3">
+      <div class="step-header">
+        <div class="step-num">3</div>
+        <div class="step-title">CALCULAR Vc — VELOCIDAD DE IMPACTO DEL VEHÍCULO</div>
+      </div>
+      <div class="formula">Vc = Vp / E_p   [m/s]</div>
+      <div class="explain">
+        Usa los valores de Vp calculados y la <strong>Eficacia de Proyección</strong>:<br>
+        • Vehículo con frente bajo (Swift 1.0): E_p = <strong>0.689</strong><br>
+        • Peatón adulto: E_p = <strong>0.813</strong><br><br>
+        Para el mínimo usa: Vc_min = Vp_min / 0.689 → convierte a km/h (× 3.6)<br>
+        Para el máximo usa: Vc_max = Vp_max / 0.813 → convierte a km/h (× 3.6)
+      </div>
+      <div class="tabs" style="margin-top:10px;">
+        <div class="tab active" onclick="switchVcTab('min',this)">Vc MÍNIMO (÷ 0.689)</div>
+        <div class="tab" onclick="switchVcTab('max',this)">Vc MÁXIMO (÷ 0.813)</div>
+      </div>
+      <div id="vc-min-panel">
+        <div class="input-row">
+          <label>Vc_min = ? km/h</label>
+          <input type="number" class="calc-input" id="in-vc-min" step="0.1" placeholder="ej: 47.5">
+          <span class="unit-label">km/h</span>
+        </div>
+      </div>
+      <div id="vc-max-panel" style="display:none;">
+        <div class="input-row">
+          <label>Vc_max = ? km/h</label>
+          <input type="number" class="calc-input" id="in-vc-max" step="0.1" placeholder="ej: 41.4">
+          <span class="unit-label">km/h</span>
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <button class="btn btn-primary" onclick="checkStep('s3')">✓ VERIFICAR AMBOS</button>
+      </div>
+      <div class="feedback" id="fb-s3"></div>
+    </div>
+
+    <!-- STEP 4: Vt -->
+    <div class="step locked" id="ss4">
+      <div class="step-header">
+        <div class="step-num">4</div>
+        <div class="step-title">CALCULAR Vt — VELOCIDAD DE TRÁNSITO (HUELLAS DE FRENADO)</div>
+      </div>
+      <div class="formula">Vt = √(2g(f_v × cos φ + sen φ) × d_hf) × 3.6   [km/h]</div>
+      <div class="explain">
+        Con φ = 0° → cos 0 = 1, sen 0 = 0 → la fórmula se simplifica:<br>
+        <strong>Vt = √(2 × 9.8 × f_v × 16.5) × 3.6</strong><br><br>
+        Calcula el rango usando f_v_min = 0.6 y f_v_max = 0.8
+      </div>
+      <div class="input-row">
+        <label>Vt_min (f_v = 0.6) = ? km/h</label>
+        <input type="number" class="calc-input" id="in-vt-min" step="0.1" placeholder="ej: 50.1">
+        <span class="unit-label">km/h</span>
+      </div>
+      <div class="input-row" style="margin-top:8px;">
+        <label>Vt_max (f_v = 0.8) = ? km/h</label>
+        <input type="number" class="calc-input" id="in-vt-max" step="0.1" placeholder="ej: 57.9">
+        <span class="unit-label">km/h</span>
+      </div>
+      <div style="margin-top:12px;">
+        <button class="btn btn-success" onclick="checkStep('s4')">🏁 FINALIZAR TALLER 1</button>
+      </div>
+      <div class="feedback" id="fb-s4"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SCREEN: GAME HAPPER -->
+<div class="screen" id="screen-happer">
+  <div class="game-header">
+    <div class="game-title">📐 TALLER 2 — MÉTODO HAPPER</div>
+    <div class="hud">
+      <div class="hud-item"><span class="hud-label">PUNTOS</span><span class="hud-val" id="h-score">0</span></div>
+      <div class="hud-item"><span class="hud-label">PASO</span><span class="hud-val" id="h-step-ind">1/2</span></div>
+      <div class="hud-item"><span class="hud-label">INTENTOS</span><span class="hud-val" id="h-attempts">3</span></div>
+    </div>
+    <button class="btn btn-ghost" onclick="goHome()">← INICIO</button>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="h-progress" style="width:0%"></div></div>
+
+  <div class="scene-box">
+    <div class="scene-title">📍 DATOS DEL CASO</div>
+    <div class="data-grid">
+      <div class="data-item"><label>s (distancia lanzamiento)</label><span class="val">9.17</span><span class="unit">m</span></div>
+      <div class="data-item"><label>d_hf (huellas frenado)</label><span class="val">16.5</span><span class="unit">m</span></div>
+      <div class="data-item"><label>Constante Happer A</label><span class="val">12.3</span></div>
+      <div class="data-item"><label>Constante Happer B</label><span class="val">1.9</span></div>
+    </div>
+  </div>
+
+  <div class="steps-container" id="happer-steps">
+
+    <!-- STEP H1: Vc Happer -->
+    <div class="step active-step" id="hs1">
+      <div class="step-header">
+        <div class="step-num">1</div>
+        <div class="step-title">CALCULAR Vc — REGRESIÓN LINEAL EMPÍRICA (HAPPER)</div>
+      </div>
+      <div class="explain">
+        El modelo de Happer es una <strong>ecuación empírica</strong> derivada de estudios estadísticos 
+        de colisiones reales. Es más directa que Searle: solo necesita la distancia de lanzamiento s.
+      </div>
+      <div class="formula">Vc = 12.3 × √s − 1.9   [km/h]</div>
+      <div class="explain">
+        Sustituye s = 9.17 m:<br>
+        √9.17 ≈ <strong>3.028</strong><br>
+        Vc = 12.3 × 3.028 − 1.9 = <strong>?</strong> km/h
+      </div>
+      <div class="input-row">
+        <label>Vc (Happer) = ? km/h</label>
+        <input type="number" class="calc-input" id="in-vc-happer" step="0.1" placeholder="ej: 35.3">
+        <span class="unit-label">km/h</span>
+        <button class="btn btn-primary" onclick="checkStep('h1')">✓ VERIFICAR</button>
+      </div>
+      <div class="feedback" id="fb-h1"></div>
+    </div>
+
+    <!-- STEP H2: Vt -->
+    <div class="step locked" id="hs2">
+      <div class="step-header">
+        <div class="step-num">2</div>
+        <div class="step-title">CALCULAR Vt — VELOCIDAD DE TRÁNSITO</div>
+      </div>
+      <div class="formula">Vt = √(2g × f_v × d_hf) × 3.6   [km/h]  (φ = 0)</div>
+      <div class="explain">Mismo procedimiento que Searle. Calcula el rango mínimo y máximo.</div>
+      <div class="input-row">
+        <label>Vt_min (f_v = 0.6) = ? km/h</label>
+        <input type="number" class="calc-input" id="in-hvt-min" step="0.1" placeholder="ej: 50.1">
+      </div>
+      <div class="input-row" style="margin-top:8px;">
+        <label>Vt_max (f_v = 0.8) = ? km/h</label>
+        <input type="number" class="calc-input" id="in-hvt-max" step="0.1" placeholder="ej: 57.9">
+      </div>
+      <div style="margin-top:12px;">
+        <button class="btn btn-success" onclick="checkStep('h2')">🏁 FINALIZAR TALLER 2</button>
+      </div>
+      <div class="feedback" id="fb-h2"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: RESULTS -->
+<div class="screen" id="screen-results">
+  <div class="results-panel">
+    <div style="font-size:3rem;" id="res-icon">🏆</div>
+    <h2 id="res-title">RECONSTRUCCIÓN COMPLETADA</h2>
+    <div class="stars" id="res-stars">⭐⭐⭐</div>
+    <p style="color:#8ab;margin-bottom:20px;" id="res-msg">Todos los cálculos verificados correctamente</p>
+
+    <div id="results-grid-area"></div>
+
+    <div style="background:rgba(0,170,255,.06);border:1px solid rgba(0,170,255,.2);border-radius:8px;padding:20px;margin:20px 0;text-align:left;">
+      <div style="font-family:'Teko',sans-serif;font-size:1.1rem;color:var(--azul);letter-spacing:2px;margin-bottom:10px;">📋 CONCLUSIÓN PERICIAL</div>
+      <p id="conclusion-text" style="font-size:.9rem;color:#9bc;line-height:1.7;"></p>
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px;">
+      <button class="btn btn-primary" onclick="goHome()">🔄 NUEVO INTENTO</button>
+      <button class="btn btn-ghost" onclick="showComparison()">📊 COMPARAR MÉTODOS</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: COMPARISON -->
+<div class="screen" id="screen-comparison">
+  <div class="scene-box">
+    <div class="scene-title">📊 COMPARACIÓN DE MÉTODOS</div>
+    <div class="explain">
+      Ambos métodos analizan el mismo accidente en la <strong>Av. Calle 26, Bogotá</strong>. 
+      El método Searle usa fricción dinámica para proyección, mientras que Happer aplica 
+      regresión empírica. Observa cómo la velocidad de tránsito Vt coincide en ambos.
+    </div>
+    <div style="overflow-x:auto;margin-top:15px;">
+      <table style="width:100%;border-collapse:collapse;font-family:'Share Tech Mono',monospace;font-size:.8rem;">
+        <thead>
+          <tr style="background:var(--bg);">
+            <th style="padding:10px;border:1px solid var(--borde);color:var(--azul);text-align:left;">PARÁMETRO</th>
+            <th style="padding:10px;border:1px solid var(--borde);color:var(--azul);">SEARLE (min)</th>
+            <th style="padding:10px;border:1px solid var(--borde);color:var(--azul);">SEARLE (max)</th>
+            <th style="padding:10px;border:1px solid var(--borde);color:var(--verde);">HAPPER</th>
+          </tr>
+        </thead>
+        <tbody id="compare-table"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:20px;">
+      <button class="btn btn-ghost" onclick="goHome()">← VOLVER</button>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────
+const state = {
+  mode: null,
+  searleScore: 0,
+  happerScore: 0,
+  searleAttempts: { s1:3, s2:3, s3:3, s4:3 },
+  happerAttempts: { h1:3, h2:3 },
+  currentMode: null
+};
+
+// ─── ANSWERS (with tolerance) ────────────────────────────────────
+const answers = {
+  'vp-min': { val: 9.09, tol: 0.15 },
+  'vp-max': { val: 9.36, tol: 0.15 },
+  'vc-min': { val: 47.5, tol: 1.5 },   // 13.19 m/s * 3.6
+  'vc-max': { val: 41.4, tol: 1.5 },   // 11.50 m/s * 3.6
+  'vt-min': { val: 50.1, tol: 1.0 },
+  'vt-max': { val: 57.9, tol: 1.0 },
+  'vc-happer': { val: 35.34, tol: 1.0 },
+  'hvt-min': { val: 50.1, tol: 1.0 },
+  'hvt-max': { val: 57.9, tol: 1.0 }
+};
+
+function inTol(val, key) {
+  const a = answers[key];
+  return Math.abs(val - a.val) <= a.tol;
+}
+
+// ─── NAVIGATION ──────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function goHome() { showScreen('intro'); }
+
+function startGame(mode) {
+  state.mode = mode;
+  showScreen(mode === 'searle' ? 'searle' : 'happer');
+}
+
+// ─── STEP CHECKER ─────────────────────────────────────────────────
+function checkStep(stepId) {
+  if (stepId.startsWith('s')) checkSearleStep(stepId);
+  else checkHapperStep(stepId);
+}
+
+function showFeedback(id, type, msg) {
+  const el = document.getElementById('fb-' + id);
+  el.className = 'feedback ' + type + ' show';
+  el.textContent = msg;
+}
+
+function unlockStep(num, prefix) {
+  const el = document.getElementById((prefix||'ss') + num);
+  if (el) {
+    el.classList.remove('locked');
+    el.classList.add('active-step');
+  }
+}
+
+function markDone(id) {
+  const el = document.getElementById(id);
+  if (el) { el.classList.remove('active-step'); el.classList.add('done'); }
+}
+
+// SEARLE ──────────────────────────────────────────────────────────
+function checkSearleStep(step) {
+  if (step === 's1') {
+    const v = parseFloat(document.getElementById('in-vp-min').value);
+    if (isNaN(v)) return showFeedback('s1','hint','⚠ Ingresa un valor numérico.');
+    if (inTol(v, 'vp-min')) {
+      showFeedback('s1','ok','✅ ¡CORRECTO! Vp_min ≈ 9.09 m/s → 32.72 km/h. El numerador bajo √ = 118.93, denominador = 1.4356 (nota: el PDF original dice 36.72 km/h — error tipográfico)');
+      markDone('ss1'); unlockStep(2,'ss');
+      updateSearleScore(25); updateSearleProgress(1);
+    } else {
+      state.searleAttempts.s1--;
+      document.getElementById('s-attempts').textContent = state.searleAttempts.s1;
+      if (state.searleAttempts.s1 <= 0) {
+        showFeedback('s1','hint','💡 Respuesta: 2×9.8×0.66×9.17=118.93; √118.93=10.905; 1+0.66²=1.4356; √1.4356=1.198; Vp=10.905/1.198≈9.09 m/s');
+        markDone('ss1'); unlockStep(2,'ss'); updateSearleProgress(1);
+      } else {
+        showFeedback('s1','err',`❌ Valor incorrecto. Revisa la fórmula. Intentos restantes: ${state.searleAttempts.s1}`);
+      }
+    }
+  }
+  else if (step === 's2') {
+    const v = parseFloat(document.getElementById('in-vp-max').value);
+    if (isNaN(v)) return showFeedback('s2','hint','⚠ Ingresa un valor numérico.');
+    if (inTol(v, 'vp-max')) {
+      showFeedback('s2','ok','✅ ¡CORRECTO! Vp_max ≈ 9.36 m/s → 33.70 km/h. Numerador = 142.33, denominador = 1.6241 (nota: el PDF original tiene error tipográfico: dice 36.70)');
+      markDone('ss2'); unlockStep(3,'ss');
+      updateSearleScore(25); updateSearleProgress(2);
+    } else {
+      state.searleAttempts.s2--;
+      document.getElementById('s-attempts').textContent = state.searleAttempts.s2;
+      if (state.searleAttempts.s2 <= 0) {
+        showFeedback('s2','hint','💡 2×9.8×0.79×9.17=142.33; √142.33=11.93; 1+0.79²=1.6241; √1.6241=1.274; Vp=11.93/1.274≈9.36 m/s → ×3.6 = 33.70 km/h (el PDF tiene error tipográfico)');
+        markDone('ss2'); unlockStep(3,'ss'); updateSearleProgress(2);
+      } else {
+        showFeedback('s2','err',`❌ Valor incorrecto. Intentos: ${state.searleAttempts.s2}`);
+      }
+    }
+  }
+  else if (step === 's3') {
+    const vmin = parseFloat(document.getElementById('in-vc-min').value);
+    const vmax = parseFloat(document.getElementById('in-vc-max').value);
+    if (isNaN(vmin)||isNaN(vmax)) return showFeedback('s3','hint','⚠ Completa AMBOS valores (cambia de pestaña).');
+    const okMin = inTol(vmin,'vc-min'), okMax = inTol(vmax,'vc-max');
+    if (okMin && okMax) {
+      showFeedback('s3','ok','✅ ¡CORRECTO! Vc_min≈47.5 km/h (9.09/0.689×3.6) · Vc_max≈41.4 km/h (9.36/0.813×3.6)');
+      markDone('ss3'); unlockStep(4,'ss');
+      updateSearleScore(25); updateSearleProgress(3);
+    } else {
+      state.searleAttempts.s3--;
+      document.getElementById('s-attempts').textContent = state.searleAttempts.s3;
+      let msg = '❌ ';
+      if (!okMin) msg += `Vc_min incorrecto (usa Vp_min÷0.689×3.6). `;
+      if (!okMax) msg += `Vc_max incorrecto (usa Vp_max÷0.813×3.6).`;
+      if (state.searleAttempts.s3 <= 0) {
+        showFeedback('s3','hint','💡 Vc_min=9.09/0.689=13.19 m/s×3.6=47.48 km/h; Vc_max=9.36/0.813=11.51 m/s×3.6=41.44 km/h');
+        markDone('ss3'); unlockStep(4,'ss'); updateSearleProgress(3);
+      } else {
+        showFeedback('s3','err', msg + ` Intentos: ${state.searleAttempts.s3}`);
+      }
+    }
+  }
+  else if (step === 's4') {
+    const vtmin = parseFloat(document.getElementById('in-vt-min').value);
+    const vtmax = parseFloat(document.getElementById('in-vt-max').value);
+    if (isNaN(vtmin)||isNaN(vtmax)) return showFeedback('s4','hint','⚠ Completa ambos valores.');
+    const okMin = inTol(vtmin,'vt-min'), okMax = inTol(vtmax,'vt-max');
+    if (okMin && okMax) {
+      showFeedback('s4','ok','✅ ¡EXCELENTE! Vt entre 50.15 y 57.90 km/h confirmado.');
+      markDone('ss4');
+      updateSearleScore(25); updateSearleProgress(4);
+      setTimeout(() => showResults('searle'), 700);
+    } else {
+      state.searleAttempts.s4--;
+      document.getElementById('s-attempts').textContent = state.searleAttempts.s4;
+      let msg = '❌ ';
+      if (!okMin) msg += 'Vt_min: √(2×9.8×0.6×16.5)×3.6. ';
+      if (!okMax) msg += 'Vt_max: √(2×9.8×0.8×16.5)×3.6.';
+      if (state.searleAttempts.s4 <= 0) {
+        showFeedback('s4','hint','💡 Vt_min=√(194.04)×3.6=13.93×3.6≈50.15 km/h; Vt_max=√(258.72)×3.6≈57.90 km/h');
+        markDone('ss4'); updateSearleProgress(4);
+        setTimeout(() => showResults('searle'), 1200);
+      } else {
+        showFeedback('s4','err', msg + ` Intentos: ${state.searleAttempts.s4}`);
+      }
+    }
+  }
+}
+
+function updateSearleScore(pts) {
+  state.searleScore += pts;
+  document.getElementById('s-score').textContent = state.searleScore;
+}
+function updateSearleProgress(step) {
+  document.getElementById('s-step-ind').textContent = step + '/4';
+  document.getElementById('s-progress').style.width = (step/4*100) + '%';
+}
+
+// HAPPER ──────────────────────────────────────────────────────────
+function checkHapperStep(step) {
+  if (step === 'h1') {
+    const v = parseFloat(document.getElementById('in-vc-happer').value);
+    if (isNaN(v)) return showFeedback('h1','hint','⚠ Ingresa un valor.');
+    if (inTol(v,'vc-happer')) {
+      showFeedback('h1','ok','✅ ¡CORRECTO! Vc = 12.3 × √9.17 − 1.9 = 12.3×3.028−1.9 ≈ 35.34 km/h');
+      markDone('hs1'); unlockStep(2,'hs');
+      updateHapperScore(50); updateHapperProgress(1);
+    } else {
+      state.happerAttempts.h1--;
+      document.getElementById('h-attempts').textContent = state.happerAttempts.h1;
+      if (state.happerAttempts.h1 <= 0) {
+        showFeedback('h1','hint','💡 √9.17≈3.0282; 12.3×3.0282=37.247; 37.247−1.9=35.35 km/h');
+        markDone('hs1'); unlockStep(2,'hs'); updateHapperProgress(1);
+      } else {
+        showFeedback('h1','err',`❌ Revisa √9.17. Intentos: ${state.happerAttempts.h1}`);
+      }
+    }
+  }
+  else if (step === 'h2') {
+    const vtmin = parseFloat(document.getElementById('in-hvt-min').value);
+    const vtmax = parseFloat(document.getElementById('in-hvt-max').value);
+    if (isNaN(vtmin)||isNaN(vtmax)) return showFeedback('h2','hint','⚠ Completa ambos campos.');
+    const ok = inTol(vtmin,'hvt-min') && inTol(vtmax,'hvt-max');
+    if (ok) {
+      showFeedback('h2','ok','✅ ¡PERFECTO! Rango Vt: 50.14 – 57.90 km/h confirmado.');
+      markDone('hs2');
+      updateHapperScore(50); updateHapperProgress(2);
+      setTimeout(() => showResults('happer'), 700);
+    } else {
+      state.happerAttempts.h2--;
+      document.getElementById('h-attempts').textContent = state.happerAttempts.h2;
+      if (state.happerAttempts.h2 <= 0) {
+        showFeedback('h2','hint','💡 Misma fórmula Vt del Taller 1: √(2×9.8×f_v×16.5)×3.6');
+        markDone('hs2'); updateHapperProgress(2);
+        setTimeout(() => showResults('happer'), 1200);
+      } else {
+        showFeedback('h2','err',`❌ Verifica la fórmula. Intentos: ${state.happerAttempts.h2}`);
+      }
+    }
+  }
+}
+
+function updateHapperScore(pts) {
+  state.happerScore += pts;
+  document.getElementById('h-score').textContent = state.happerScore;
+}
+function updateHapperProgress(step) {
+  document.getElementById('h-step-ind').textContent = step + '/2';
+  document.getElementById('h-progress').style.width = (step/2*100) + '%';
+}
+
+// ─── RESULTS ─────────────────────────────────────────────────────
+function showResults(mode) {
+  const score = mode === 'searle' ? state.searleScore : state.happerScore;
+  const maxScore = mode === 'searle' ? 100 : 100;
+  const stars = score >= 90 ? '⭐⭐⭐' : score >= 60 ? '⭐⭐' : '⭐';
+  const title = score >= 90 ? 'RECONSTRUCCIÓN COMPLETADA' : score >= 60 ? 'BUEN ANÁLISIS' : 'MISIÓN CUMPLIDA';
+  const msg = score >= 90 ? 'Todos los cálculos verificados. Excelente labor pericial.' :
+              score >= 60 ? 'Cálculos correctos con algunas orientaciones.' :
+              'Revisa las fórmulas para mejorar precisión.';
+
+  document.getElementById('res-icon').textContent = score >= 90 ? '🏆' : score >= 60 ? '🥈' : '📋';
+  document.getElementById('res-title').textContent = title;
+  document.getElementById('res-stars').textContent = stars;
+  document.getElementById('res-msg').textContent = msg;
+
+  if (mode === 'searle') {
+    document.getElementById('results-grid-area').innerHTML = `
+      <div class="results-grid">
+        <div class="result-box"><div class="r-label">Vp_min</div><div class="r-val">9.09 <span class="r-unit">m/s</span></div></div>
+        <div class="result-box"><div class="r-label">Vp_max</div><div class="r-val">9.36 <span class="r-unit">m/s</span></div></div>
+        <div class="result-box"><div class="r-label">Vc_min (Searle)</div><div class="r-val">47.5 <span class="r-unit">km/h</span></div></div>
+        <div class="result-box"><div class="r-label">Vc_max (Searle)</div><div class="r-val">41.4 <span class="r-unit">km/h</span></div></div>
+        <div class="result-box highlight"><div class="r-label">Vt_min (tránsito)</div><div class="r-val">50.1 <span class="r-unit">km/h</span></div></div>
+        <div class="result-box highlight"><div class="r-label">Vt_max (tránsito)</div><div class="r-val">57.9 <span class="r-unit">km/h</span></div></div>
+      </div>`;
+    document.getElementById('conclusion-text').textContent =
+      'Aplicando el modelo de Searle con los parámetros de la escena (Av. Calle 26, Bogotá, concreto usado plano) y la distancia de lanzamiento del peatón s = 9.17 m, se determinó que la magnitud de la velocidad mínima de proyección del peatón es Vp = 9.09 a 9.36 m/s. La velocidad de impacto del vehículo Vc se estima entre 41.4 y 47.5 km/h. Con las huellas de frenado dhf = 16.5 m, la velocidad de tránsito Vt está en el rango de 50.15 a 57.90 km/h.';
+  } else {
+    document.getElementById('results-grid-area').innerHTML = `
+      <div class="results-grid">
+        <div class="result-box highlight"><div class="r-label">Vc (Happer)</div><div class="r-val">35.34 <span class="r-unit">km/h</span></div></div>
+        <div class="result-box highlight"><div class="r-label">Vt_min</div><div class="r-val">50.14 <span class="r-unit">km/h</span></div></div>
+        <div class="result-box highlight"><div class="r-label">Vt_max</div><div class="r-val">57.90 <span class="r-unit">km/h</span></div></div>
+      </div>`;
+    document.getElementById('conclusion-text').textContent =
+      'Aplicando la regresión lineal empírica de Happer con s = 9.17 m, la velocidad de impacto del vehículo se estima en Vc = 35.34 km/h. Nótese que este valor es inferior al obtenido por Searle (41–47 km/h), lo que refleja las diferencias metodológicas entre los dos modelos. La velocidad de tránsito Vt con las huellas de frenado se sitúa en el rango 50.14 – 57.90 km/h, coincidiendo con el Taller 1.';
+  }
+
+  showScreen('results');
+  if (score >= 90) launchConfetti();
+}
+
+// ─── COMPARISON TABLE ─────────────────────────────────────────────
+function showComparison() {
+  const rows = [
+    ['s (lanzamiento)', '9.17 m', '9.17 m', '9.17 m'],
+    ['Vp (proyección peatón)', '9.09 m/s', '9.36 m/s', 'N/A (no usa)'],
+    ['Vc (impacto vehículo)', '47.5 km/h', '41.4 km/h', '35.34 km/h'],
+    ['d_hf (huellas frenado)', '16.5 m', '16.5 m', '16.5 m'],
+    ['Vt mínimo', '50.15 km/h', '50.15 km/h', '50.14 km/h'],
+    ['Vt máximo', '57.90 km/h', '57.90 km/h', '57.90 km/h'],
+    ['Límite urbano (Bogotá)', '50 km/h', '50 km/h', '50 km/h'],
+    ['¿Excedía límite?', '✓ sí', '✓ sí', '✓ sí'],
+  ];
+  const tbody = document.getElementById('compare-table');
+  tbody.innerHTML = rows.map((r,i) => `
+    <tr style="background:${i%2?'var(--panel)':'var(--panel2)'}">
+      <td style="padding:8px 12px;border:1px solid var(--borde);color:#9bc;">${r[0]}</td>
+      <td style="padding:8px 12px;border:1px solid var(--borde);text-align:center;color:var(--azul);">${r[1]}</td>
+      <td style="padding:8px 12px;border:1px solid var(--borde);text-align:center;color:var(--azul);">${r[2]}</td>
+      <td style="padding:8px 12px;border:1px solid var(--borde);text-align:center;color:var(--verde);">${r[3]}</td>
+    </tr>`).join('');
+  showScreen('comparison');
+}
+
+// ─── Vc TAB ───────────────────────────────────────────────────────
+function switchVcTab(tab, el) {
+  document.querySelectorAll('#ss3 .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('vc-min-panel').style.display = tab==='min'?'block':'none';
+  document.getElementById('vc-max-panel').style.display = tab==='max'?'block':'none';
+}
+
+// ─── CONFETTI ────────────────────────────────────────────────────
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const pieces = Array.from({length:120},() => ({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height - canvas.height,
+    w: 6+Math.random()*8, h: 8+Math.random()*12,
+    color: ['#00ff88','#0af','#ffd600','#ff3b3b'][Math.floor(Math.random()*4)],
+    rot: Math.random()*360, speed: 2+Math.random()*3, drift: (Math.random()-.5)*2
+  }));
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pieces.forEach(p => {
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
+      ctx.fillStyle = p.color; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+      ctx.restore();
+      p.y += p.speed; p.x += p.drift; p.rot += 3;
+      if (p.y > canvas.height) p.y = -20;
+    });
+    frame++;
+    if (frame < 180) requestAnimationFrame(draw);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  draw();
+}
+</script>
+</body>
+</html>

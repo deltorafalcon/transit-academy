@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🚦 Transit Academy — Juegos Didácticos para Agentes de Tránsito</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #07111f;
+  --navy2: #0d1e34;
+  --navy3: #152840;
+  --teal: #1DB88E;
+  --teal2: #13a07a;
+  --gold: #F59E0B;
+  --coral: #f04060;
+  --purple: #7c5cbf;
+  --white: #f0f6ff;
+  --muted: #6b8aaa;
+  --card: rgba(21,40,64,0.95);
+  --glass: rgba(13,30,52,0.85);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--white);min-height:100vh;overflow-x:hidden}
+h1,h2,h3,.badge-text{font-family:'Rajdhani',sans-serif}
+
+/* ─── GLOBAL ─── */
+.hidden{display:none!important}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border:none;border-radius:10px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:1.1rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;transition:all .2s;text-decoration:none}
+.btn-primary{background:var(--teal);color:#000}
+.btn-primary:hover{background:var(--teal2);transform:translateY(-2px);box-shadow:0 8px 25px rgba(29,184,142,.35)}
+.btn-gold{background:var(--gold);color:#000}
+.btn-gold:hover{background:#d88e0a;transform:translateY(-2px)}
+.btn-outline{background:transparent;color:var(--white);border:2px solid var(--teal)}
+.btn-outline:hover{background:rgba(29,184,142,.15)}
+.btn-danger{background:var(--coral);color:#fff}
+.pill{display:inline-block;padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.pill-teal{background:rgba(29,184,142,.2);color:var(--teal);border:1px solid rgba(29,184,142,.4)}
+.pill-gold{background:rgba(245,158,11,.2);color:var(--gold);border:1px solid rgba(245,158,11,.4)}
+.pill-coral{background:rgba(240,64,96,.2);color:var(--coral);border:1px solid rgba(240,64,96,.4)}
+.card{background:var(--card);border:1px solid rgba(29,184,142,.15);border-radius:16px;padding:24px}
+
+/* ─── STARS BG ─── */
+#stars-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:.5}
+
+/* ─── AUDIO INDICATOR ─── */
+#audio-btn{position:fixed;top:14px;right:14px;z-index:999;background:rgba(21,40,64,.9);border:1px solid rgba(29,184,142,.3);border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;transition:.2s}
+#audio-btn:hover{border-color:var(--teal)}
+
+/* ─── SCREEN BASE ─── */
+.screen{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
+
+/* ─── LOBBY ─── */
+#lobby{justify-content:flex-start;padding-top:0}
+.lobby-hero{width:100%;background:linear-gradient(180deg,rgba(7,17,31,0) 0%,var(--navy) 100%),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1400' height='320'%3E%3Crect fill='%230d1e34' width='1400' height='320'/%3E%3Cg opacity='.08'%3E%3Crect x='0' y='220' width='1400' height='80' fill='%23344'/%3E%3Crect x='0' y='240' width='1400' height='40' fill='%23fff'/%3E%3Crect x='680' y='200' width='40' height='80' fill='%23fff'/%3E%3C/g%3E%3Cg stroke='%231DB88E' stroke-width='.5' opacity='.3'%3E%3Cline x1='0' y1='260' x2='1400' y2='260'/%3E%3Cline x1='0' y1='200' x2='1400' y2='200'/%3E%3C/g%3E%3C/svg%3E");background-size:cover;background-position:center;padding:60px 20px 40px;text-align:center;position:relative;overflow:hidden}
+.road-lines{position:absolute;bottom:0;left:50%;transform:translateX(-50%);display:flex;gap:60px}
+.road-line{width:60px;height:8px;background:var(--gold);border-radius:4px;animation:roadMove 1.2s linear infinite}
+.road-line:nth-child(2){animation-delay:.4s}
+.road-line:nth-child(3){animation-delay:.8s}
+@keyframes roadMove{0%{opacity:1;transform:translateX(0)}100%{opacity:0;transform:translateX(-80px)}}
+.colombia-flag{display:flex;height:8px;width:200px;margin:0 auto 20px;border-radius:4px;overflow:hidden}
+.flag-yellow{flex:2;background:#FCD116}
+.flag-blue{flex:1;background:#003087}
+.flag-red{flex:1;background:#CE1126}
+.hero-badge{display:inline-flex;align-items:center;gap:10px;background:rgba(29,184,142,.15);border:1px solid rgba(29,184,142,.4);border-radius:40px;padding:8px 22px;margin-bottom:20px}
+.hero-title{font-size:clamp(2rem,5vw,3.5rem);font-weight:700;line-height:1.1;margin-bottom:10px}
+.hero-title span{color:var(--teal)}
+.hero-sub{font-size:1rem;color:rgba(240,246,255,.7);max-width:600px;margin:0 auto 30px}
+.stats-bar{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-bottom:40px}
+.stat-bubble{background:rgba(21,40,64,.8);border:1px solid rgba(29,184,142,.2);border-radius:12px;padding:12px 20px;text-align:center}
+.stat-num{font-family:'Rajdhani',sans-serif;font-size:1.8rem;font-weight:700;color:var(--teal)}
+.stat-label{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+
+.games-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;max-width:1000px;width:100%;margin:0 auto 40px}
+.game-card{background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:28px;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+.game-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.game-card.card-teal::before{background:linear-gradient(90deg,var(--teal),transparent)}
+.game-card.card-gold::before{background:linear-gradient(90deg,var(--gold),transparent)}
+.game-card.card-purple::before{background:linear-gradient(90deg,var(--purple),transparent)}
+.game-card:hover{transform:translateY(-6px);border-color:rgba(29,184,142,.35);box-shadow:0 20px 40px rgba(0,0,0,.4)}
+.game-icon{font-size:3rem;margin-bottom:16px;display:block}
+.game-card h3{font-size:1.6rem;font-weight:700;margin-bottom:8px}
+.game-card p{font-size:.9rem;color:var(--muted);line-height:1.5;margin-bottom:16px}
+.game-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.difficulty{display:flex;gap:4px}
+.difficulty span{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.15)}
+.difficulty span.active{background:var(--teal)}
+.leaderboard-preview{max-width:1000px;width:100%;margin:0 auto 30px}
+.lb-row{display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:10px;background:rgba(21,40,64,.6);margin-bottom:6px;transition:.2s}
+.lb-row:hover{background:rgba(21,40,64,.9)}
+.lb-rank{font-family:'Rajdhani',sans-serif;font-size:1.2rem;font-weight:700;width:36px;color:var(--muted)}
+.lb-rank.gold{color:#FFD700}
+.lb-rank.silver{color:#C0C0C0}
+.lb-rank.bronze{color:#CD7F32}
+.lb-name{flex:1;font-size:.95rem}
+.lb-score{font-family:'Rajdhani',sans-serif;font-size:1.1rem;font-weight:700;color:var(--teal)}
+
+/* ─── GAME SHELL ─── */
+.game-header{width:100%;max-width:800px;display:flex;align-items:center;gap:16px;margin-bottom:24px}
+.back-btn{background:rgba(21,40,64,.8);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:8px 16px;cursor:pointer;color:var(--white);font-size:.9rem;transition:.2s}
+.back-btn:hover{border-color:var(--teal)}
+.game-title{font-size:1.4rem;font-weight:700;flex:1}
+.score-display{font-family:'Rajdhani',sans-serif;font-size:1.3rem;font-weight:700;color:var(--gold)}
+.progress-bar-outer{width:100%;max-width:800px;height:6px;background:rgba(255,255,255,.1);border-radius:3px;margin-bottom:20px}
+.progress-bar-inner{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--teal),var(--gold));transition:width .4s}
+.timer-ring{position:relative;width:60px;height:60px;flex-shrink:0}
+.timer-ring svg{transform:rotate(-90deg)}
+.timer-ring .bg{stroke:rgba(255,255,255,.1);fill:none;stroke-width:4}
+.timer-ring .fg{stroke:var(--teal);fill:none;stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .9s linear, stroke .5s}
+.timer-num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Rajdhani',sans-serif;font-size:1.3rem;font-weight:700}
+
+/* ─── GAME 1 — SAST TRIVIA ─── */
+.question-card{max-width:800px;width:100%;background:var(--card);border:1px solid rgba(29,184,142,.2);border-radius:20px;padding:32px}
+.question-num{font-size:.85rem;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px}
+.question-text{font-size:1.25rem;font-weight:500;line-height:1.5;margin-bottom:28px}
+.options-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
+@media(max-width:600px){.options-grid{grid-template-columns:1fr}}
+.option-btn{padding:16px 20px;background:rgba(21,40,64,.6);border:1.5px solid rgba(255,255,255,.12);border-radius:12px;cursor:pointer;text-align:left;color:var(--white);font-size:.95rem;line-height:1.4;transition:all .2s;position:relative}
+.option-btn:hover:not(:disabled){border-color:var(--teal);background:rgba(29,184,142,.1);transform:translateY(-1px)}
+.option-btn.correct{border-color:#22c55e!important;background:rgba(34,197,94,.15)!important;animation:correctPulse .4s}
+.option-btn.wrong{border-color:var(--coral)!important;background:rgba(240,64,96,.15)!important;animation:shake .4s}
+.option-btn:disabled{cursor:not-allowed}
+@keyframes correctPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.feedback-box{padding:16px 20px;border-radius:12px;font-size:.9rem;line-height:1.6;margin-bottom:20px;opacity:0;transition:opacity .3s}
+.feedback-box.show{opacity:1}
+.feedback-correct{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:#4ade80}
+.feedback-wrong{background:rgba(240,64,96,.1);border:1px solid rgba(240,64,96,.3);color:#fb7185}
+.ai-loading{display:inline-flex;gap:4px;align-items:center}
+.ai-loading span{width:6px;height:6px;border-radius:50%;background:currentColor;animation:blink 1.2s infinite}
+.ai-loading span:nth-child(2){animation-delay:.2s}
+.ai-loading span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+
+/* ─── GAME 2 — SPEEDOMETER ─── */
+.speedometer-container{max-width:700px;width:100%}
+.scenario-card{background:var(--card);border:1px solid rgba(245,158,11,.2);border-radius:20px;padding:28px;margin-bottom:20px}
+.scenario-scene{font-size:3.5rem;text-align:center;margin-bottom:16px;position:relative;overflow:hidden}
+.scenario-scene::after{content:'';position:absolute;bottom:0;left:0;right:0;height:30px;background:linear-gradient(0deg,var(--card),transparent)}
+.scenario-title{font-size:1.1rem;color:var(--gold);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.scenario-desc{font-size:1rem;color:rgba(240,246,255,.8);line-height:1.5}
+.speed-selector{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;max-width:700px;width:100%}
+.speed-btn{padding:20px 10px;background:rgba(21,40,64,.6);border:1.5px solid rgba(255,255,255,.12);border-radius:14px;cursor:pointer;color:var(--white);text-align:center;transition:all .2s;font-family:'Rajdhani',sans-serif}
+.speed-btn .speed-val{font-size:2rem;font-weight:700;display:block;line-height:1}
+.speed-btn .speed-unit{font-size:.7rem;color:var(--muted);display:block;text-transform:uppercase;margin-top:2px}
+.speed-btn:hover:not(:disabled){border-color:var(--gold);background:rgba(245,158,11,.1);transform:translateY(-2px)}
+.speed-btn.correct{border-color:#22c55e!important;background:rgba(34,197,94,.15)!important}
+.speed-btn.wrong{border-color:var(--coral)!important;background:rgba(240,64,96,.15)!important}
+
+/* ─── GAME 3 — CALE CLASSIFIER ─── */
+.cale-container{max-width:900px;width:100%}
+.cale-instructions{text-align:center;margin-bottom:24px}
+.cale-instructions p{color:var(--muted);font-size:.9rem;margin-top:6px}
+.cale-board{display:grid;grid-template-columns:1fr 1.8fr;gap:20px;margin-bottom:20px}
+@media(max-width:680px){.cale-board{grid-template-columns:1fr}}
+.vehicles-pool{background:rgba(21,40,64,.6);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:16px}
+.vehicles-pool h4{font-size:.8rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:12px}
+.vehicle-chip{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--navy3);border:1.5px solid rgba(255,255,255,.15);border-radius:10px;cursor:grab;margin-bottom:8px;transition:all .2s;user-select:none;touch-action:none}
+.vehicle-chip:hover{border-color:var(--teal);transform:translateX(4px)}
+.vehicle-chip.dragging{opacity:.4;cursor:grabbing}
+.vehicle-chip.placed{opacity:.3;pointer-events:none}
+.vehicle-chip .vicon{font-size:1.6rem;width:36px;text-align:center}
+.vehicle-chip .vinfo{flex:1}
+.vehicle-chip .vname{font-size:.9rem;font-weight:500}
+.vehicle-chip .vcat{font-size:.72rem;color:var(--muted)}
+.cale-classes{display:flex;flex-direction:column;gap:12px}
+.cale-drop-zone{background:rgba(21,40,64,.6);border:2px dashed rgba(255,255,255,.15);border-radius:14px;padding:14px;min-height:80px;transition:all .2s;position:relative}
+.cale-drop-zone.drag-over{border-color:var(--teal);background:rgba(29,184,142,.08)}
+.cale-drop-zone.correct-drop{border-color:#22c55e;border-style:solid}
+.cale-drop-zone.wrong-drop{border-color:var(--coral);border-style:solid;animation:shake .4s}
+.zone-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.zone-badge{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1rem;padding:4px 14px;border-radius:20px}
+.zone-badge.clase1{background:rgba(29,184,142,.2);color:var(--teal)}
+.zone-badge.clase2{background:rgba(245,158,11,.2);color:var(--gold)}
+.zone-badge.clase3{background:rgba(240,64,96,.2);color:var(--coral)}
+.zone-desc{font-size:.75rem;color:var(--muted);line-height:1.3}
+.zone-vehicles{display:flex;flex-wrap:wrap;gap:6px;min-height:32px}
+.zone-chip{padding:5px 10px;background:rgba(29,184,142,.15);border:1px solid rgba(29,184,142,.3);border-radius:8px;font-size:.78rem;cursor:pointer;transition:.2s}
+.zone-chip:hover{background:rgba(240,64,96,.15);border-color:var(--coral)}
+.drop-hint{color:rgba(255,255,255,.25);font-size:.8rem;font-style:italic}
+
+/* ─── RESULT SCREEN ─── */
+.result-screen{max-width:700px;width:100%;text-align:center}
+.result-trophy{font-size:5rem;margin-bottom:10px;animation:trophyBounce 1s ease-out}
+@keyframes trophyBounce{0%{transform:scale(0) rotate(-20deg)}70%{transform:scale(1.15) rotate(5deg)}100%{transform:scale(1) rotate(0)}}
+.result-score{font-size:4rem;font-weight:700;color:var(--gold);margin:16px 0;font-family:'Rajdhani',sans-serif}
+.result-grade{font-size:1rem;color:var(--muted);margin-bottom:20px}
+.share-code{background:var(--navy3);border:1px solid rgba(29,184,142,.3);border-radius:12px;padding:16px;font-family:monospace;font-size:1.1rem;color:var(--teal);letter-spacing:4px;margin-bottom:24px;cursor:pointer;transition:.2s}
+.share-code:hover{background:var(--navy2)}
+
+/* ─── NAME MODAL ─── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-box{background:var(--navy2);border:1px solid rgba(29,184,142,.3);border-radius:20px;padding:36px;max-width:420px;width:90%;text-align:center}
+.modal-box h2{margin-bottom:8px;font-size:1.8rem}
+.modal-box p{color:var(--muted);margin-bottom:24px;font-size:.9rem}
+.name-input{width:100%;padding:14px 18px;background:rgba(21,40,64,.8);border:1.5px solid rgba(255,255,255,.15);border-radius:12px;color:var(--white);font-size:1rem;outline:none;margin-bottom:20px;text-align:center;font-family:'Rajdhani',sans-serif;font-size:1.2rem;letter-spacing:1px}
+.name-input:focus{border-color:var(--teal)}
+
+/* ─── CONFETTI ─── */
+#confetti-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:50}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:500px){
+  .games-grid{grid-template-columns:1fr}
+  .options-grid{grid-template-columns:1fr}
+  .speed-selector{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<canvas id="stars-canvas"></canvas>
+<canvas id="confetti-canvas"></canvas>
+<button id="audio-btn" onclick="toggleAudio()" title="Sonido">🔊</button>
+
+<!-- NAME MODAL -->
+<div id="name-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div style="font-size:3rem;margin-bottom:12px">👮</div>
+    <h2>Registro de Agente</h2>
+    <p>Ingresa tu nombre para el marcador oficial del cuerpo de tránsito</p>
+    <input class="name-input" id="agent-name" placeholder="Tu nombre" maxlength="20">
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="startSession()">
+      <span>Ingresar a Academia</span> <span>→</span>
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════ LOBBY ══════════════ -->
+<div id="lobby" class="screen hidden">
+  <div class="lobby-hero" style="width:100%">
+    <div class="colombia-flag"></div>
+    <div class="hero-badge">
+      <span>🚦</span>
+      <span class="badge-text" style="font-size:1rem;font-weight:700;letter-spacing:2px">TRANSIT ACADEMY</span>
+      <span>🏛️</span>
+    </div>
+    <h1 class="hero-title">Juegos Didácticos para<br><span>Agentes de Tránsito</span></h1>
+    <p class="hero-sub">Domina la normativa vial colombiana a través de 3 juegos interactivos con IA. Fotodetecciones · Velocidad · CALE</p>
+    <div class="stats-bar">
+      <div class="stat-bubble">
+        <div class="stat-num" id="total-players">0</div>
+        <div class="stat-label">Agentes Activos</div>
+      </div>
+      <div class="stat-bubble">
+        <div class="stat-num">3</div>
+        <div class="stat-label">Juegos Disponibles</div>
+      </div>
+      <div class="stat-bubble">
+        <div class="stat-num" id="top-score">0</div>
+        <div class="stat-label">Máx. Puntos</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width:1000px;width:100%;padding:0 20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:30px 0 16px">
+      <h2 style="font-size:1.5rem">Selecciona un Juego</h2>
+      <span id="welcome-name" style="color:var(--teal);font-weight:600"></span>
+    </div>
+    <div class="games-grid">
+      <div class="game-card card-teal" onclick="launchGame(1)">
+        <span class="game-icon">📸</span>
+        <div class="game-meta">
+          <span class="pill pill-teal">Fotodetecciones</span>
+          <span class="pill" style="background:rgba(255,255,255,.08)">10 preguntas</span>
+        </div>
+        <h3>SAST Detector</h3>
+        <p>Domina el régimen legal de las fotodetecciones: SAST, Ley 1843, Resolución 718, señalización y criterios técnicos.</p>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="difficulty">
+            <span class="active"></span><span class="active"></span><span class="active"></span><span></span><span></span>
+          </div>
+          <button class="btn btn-primary" style="padding:8px 20px;font-size:.9rem">Jugar →</button>
+        </div>
+      </div>
+      <div class="game-card card-gold" onclick="launchGame(2)">
+        <span class="game-icon">⚡</span>
+        <div class="game-meta">
+          <span class="pill pill-gold">Velocidad</span>
+          <span class="pill" style="background:rgba(255,255,255,.08)">8 escenarios</span>
+        </div>
+        <h3>Velocímetro de Decisión</h3>
+        <p>Identifica la velocidad adecuada según el entorno: zonas escolares, lluvia, vías nacionales y actores vulnerables.</p>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="difficulty">
+            <span class="active"></span><span class="active"></span><span class="active"></span><span class="active"></span><span></span>
+          </div>
+          <button class="btn btn-gold" style="padding:8px 20px;font-size:.9rem">Jugar →</button>
+        </div>
+      </div>
+      <div class="game-card card-purple" onclick="launchGame(3)">
+        <span class="game-icon">🚛</span>
+        <div class="game-meta">
+          <span class="pill" style="background:rgba(124,92,191,.2);color:#a78bfa;border:1px solid rgba(124,92,191,.4)">CALE</span>
+          <span class="pill" style="background:rgba(255,255,255,.08)">Clasificación</span>
+        </div>
+        <h3>Clasifica el CALE</h3>
+        <p>Arrastra cada vehículo a su clase CALE correcta según la Resolución 20253040037125 del MinTransporte.</p>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="difficulty">
+            <span class="active"></span><span class="active"></span><span class="active"></span><span class="active"></span><span class="active"></span>
+          </div>
+          <button class="btn" style="background:var(--purple);color:#fff;padding:8px 20px;font-size:.9rem">Jugar →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEADERBOARD -->
+    <div class="leaderboard-preview">
+      <h3 style="margin-bottom:14px;font-size:1.2rem">🏆 Marcador del Cuerpo</h3>
+      <div id="leaderboard-list">
+        <div class="lb-row"><span class="lb-rank gold">01</span><span class="lb-name">—</span><span class="lb-score">—</span></div>
+        <div class="lb-row"><span class="lb-rank silver">02</span><span class="lb-name">—</span><span class="lb-score">—</span></div>
+        <div class="lb-row"><span class="lb-rank bronze">03</span><span class="lb-name">—</span><span class="lb-score">—</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ GAME 1 — SAST TRIVIA ══════════════ -->
+<div id="game1" class="screen hidden">
+  <div class="game-header" style="max-width:800px;width:100%">
+    <button class="back-btn" onclick="backToLobby()">← Lobby</button>
+    <div class="game-title">📸 SAST Detector</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="timer-ring" id="timer-ring1">
+        <svg width="60" height="60"><circle class="bg" cx="30" cy="30" r="24"/><circle class="fg" id="timer-circle" cx="30" cy="30" r="24" stroke-dasharray="150.8" stroke-dashoffset="0"/></svg>
+        <div class="timer-num" id="timer-num">15</div>
+      </div>
+      <div class="score-display">⭐ <span id="g1-score">0</span></div>
+    </div>
+  </div>
+  <div class="progress-bar-outer" style="max-width:800px;width:100%"><div class="progress-bar-inner" id="g1-progress" style="width:0%"></div></div>
+  <div class="question-card">
+    <div class="question-num" id="g1-qnum">Pregunta 1 / 10</div>
+    <div class="question-text" id="g1-question">Cargando pregunta...</div>
+    <div class="options-grid" id="g1-options"></div>
+    <div class="feedback-box" id="g1-feedback"></div>
+    <button class="btn btn-primary hidden" id="g1-next" onclick="nextQuestion()" style="width:100%;justify-content:center">Siguiente Pregunta →</button>
+  </div>
+</div>
+
+<!-- ══════════════ GAME 2 — SPEED ══════════════ -->
+<div id="game2" class="screen hidden">
+  <div class="game-header" style="max-width:700px;width:100%">
+    <button class="back-btn" onclick="backToLobby()">← Lobby</button>
+    <div class="game-title">⚡ Velocímetro</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="timer-ring">
+        <svg width="60" height="60"><circle class="bg" cx="30" cy="30" r="24"/><circle class="fg" id="timer-circle2" cx="30" cy="30" r="24" stroke-dasharray="150.8" stroke-dashoffset="0"/></svg>
+        <div class="timer-num" id="timer-num2">20</div>
+      </div>
+      <div class="score-display">⭐ <span id="g2-score">0</span></div>
+    </div>
+  </div>
+  <div class="progress-bar-outer" style="max-width:700px;width:100%"><div class="progress-bar-inner" id="g2-progress" style="width:0%"></div></div>
+  <div class="speedometer-container">
+    <div class="scenario-card">
+      <div class="scenario-scene" id="g2-scene">🏙️🌧️</div>
+      <div class="scenario-title" id="g2-stitle">ESCENARIO</div>
+      <div class="scenario-desc" id="g2-sdesc">Descripción del escenario...</div>
+    </div>
+    <p style="text-align:center;color:var(--muted);font-size:.9rem;margin-bottom:12px">¿Cuál es el límite de velocidad correcto?</p>
+    <div class="speed-selector" id="g2-options"></div>
+    <div class="feedback-box" id="g2-feedback"></div>
+    <button class="btn btn-gold hidden" id="g2-next" onclick="nextSpeed()" style="width:100%;justify-content:center;max-width:700px">Siguiente Escenario →</button>
+  </div>
+</div>
+
+<!-- ══════════════ GAME 3 — CALE ══════════════ -->
+<div id="game3" class="screen hidden">
+  <div class="game-header" style="max-width:900px;width:100%">
+    <button class="back-btn" onclick="backToLobby()">← Lobby</button>
+    <div class="game-title">🚛 Clasifica el CALE</div>
+    <div class="score-display">⭐ <span id="g3-score">0</span></div>
+  </div>
+  <div class="cale-container">
+    <div class="cale-instructions">
+      <h2 style="font-size:1.4rem">Matriz de Clasificación CALE</h2>
+      <p>Arrastra cada vehículo a su clase correcta según la Resolución 20253040037125</p>
+    </div>
+    <div class="cale-board">
+      <div class="vehicles-pool">
+        <h4>Vehículos a Clasificar</h4>
+        <div id="vehicles-pool"></div>
+      </div>
+      <div class="cale-classes" id="cale-classes"></div>
+    </div>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-outline" onclick="resetCale()">↺ Reiniciar</button>
+      <button class="btn" id="check-cale-btn" style="background:var(--purple);color:#fff" onclick="checkCale()">✓ Verificar Clasificación</button>
+    </div>
+    <div class="feedback-box" id="g3-feedback" style="margin-top:16px;max-width:900px"></div>
+    <div id="g3-ai-explanation" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- ══════════════ RESULT ══════════════ -->
+<div id="result-screen" class="screen hidden">
+  <div class="result-screen">
+    <div id="result-trophy"></div>
+    <h2 id="result-game-name" style="font-size:1.3rem;color:var(--muted)"></h2>
+    <div class="result-score" id="result-score">0 pts</div>
+    <p class="result-grade" id="result-grade"></p>
+    <div class="card" style="margin-bottom:24px;text-align:left">
+      <h3 style="margin-bottom:12px;color:var(--teal)">Análisis de tu Rendimiento</h3>
+      <div id="result-ai-analysis" style="font-size:.9rem;line-height:1.7;color:rgba(240,246,255,.8)">
+        <div class="ai-loading"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
+      <p style="font-size:.85rem;color:var(--muted)">Código de resultado — comparte con tu jefe de escuadrón</p>
+      <div class="share-code" id="share-code" onclick="copyCode()">COPY</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+        <button class="btn btn-outline" onclick="backToLobby()">← Ver Marcador</button>
+        <button class="btn btn-primary" id="play-again-btn">Jugar de Nuevo ↺</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+let agentName = '';
+let audioEnabled = true;
+let audioCtx = null;
+let currentGame = 0;
+let scores = {1:0, 2:0, 3:0};
+let leaderboard = JSON.parse(localStorage.getItem('transit_lb') || '[]');
+
+// ──── AUDIO ────
+function initAudio(){
+  if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+}
+function playTone(freq, dur, type='sine', vol=0.15){
+  if(!audioEnabled || !audioCtx) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(vol, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+  o.start(); o.stop(audioCtx.currentTime + dur);
+}
+function playCorrect(){ initAudio(); playTone(523,0.1); setTimeout(()=>playTone(659,0.1),110); setTimeout(()=>playTone(784,0.2),220); }
+function playWrong(){ initAudio(); playTone(220,0.2,'sawtooth',0.1); setTimeout(()=>playTone(196,0.2,'sawtooth',0.1),220); }
+function playClick(){ initAudio(); playTone(440,0.05,'triangle',0.08); }
+function toggleAudio(){ audioEnabled=!audioEnabled; document.getElementById('audio-btn').textContent=audioEnabled?'🔊':'🔇'; }
+
+// ──── STARS ────
+(function(){
+  const c=document.getElementById('stars-canvas');
+  const ctx=c.getContext('2d');
+  let stars=[];
+  function init(){
+    c.width=window.innerWidth; c.height=window.innerHeight;
+    stars=Array.from({length:120},()=>({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*1.5+.3,speed:Math.random()*.3+.1,opacity:Math.random()}));
+  }
+  function draw(){
+    ctx.clearRect(0,0,c.width,c.height);
+    stars.forEach(s=>{
+      s.opacity+=.005*(Math.random()>.5?1:-1);
+      s.opacity=Math.max(.1,Math.min(.9,s.opacity));
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(180,220,255,${s.opacity})`; ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  init(); draw(); window.addEventListener('resize',init);
+})();
+
+// ──── CONFETTI ────
+function launchConfetti(count=150){
+  const c=document.getElementById('confetti-canvas');
+  const ctx=c.getContext('2d');
+  c.width=window.innerWidth; c.height=window.innerHeight;
+  const colors=['#1DB88E','#F59E0B','#f04060','#7c5cbf','#ffffff','#FCD116'];
+  const particles=Array.from({length:count},()=>({
+    x:Math.random()*c.width, y:Math.random()*c.height-c.height,
+    w:Math.random()*10+4, h:Math.random()*6+2,
+    color:colors[Math.floor(Math.random()*colors.length)],
+    vy:Math.random()*3+2, vx:(Math.random()-.5)*4,
+    rot:Math.random()*360, rotV:(Math.random()-.5)*6
+  }));
+  let frame=0;
+  function draw(){
+    ctx.clearRect(0,0,c.width,c.height);
+    particles.forEach(p=>{
+      p.y+=p.vy; p.x+=p.vx; p.rot+=p.rotV; p.vy+=.05;
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
+      ctx.fillStyle=p.color; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+      ctx.restore();
+    });
+    if(++frame<200) requestAnimationFrame(draw);
+    else ctx.clearRect(0,0,c.width,c.height);
+  }
+  draw();
+}
+
+// ──── SESSION ────
+function startSession(){
+  const n = document.getElementById('agent-name').value.trim();
+  if(!n){document.getElementById('agent-name').style.borderColor='var(--coral)';return;}
+  initAudio(); playClick();
+  agentName = n;
+  document.getElementById('name-modal').classList.add('hidden');
+  document.getElementById('lobby').classList.remove('hidden');
+  document.getElementById('welcome-name').textContent = '👮 ' + n;
+  updateLeaderboardUI();
+}
+
+function backToLobby(){
+  ['game1','game2','game3','result-screen'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  document.getElementById('lobby').classList.remove('hidden');
+  clearTimeout(timerHandle);
+}
+
+function launchGame(n){
+  playClick();
+  document.getElementById('lobby').classList.add('hidden');
+  currentGame = n;
+  if(n===1) startGame1();
+  else if(n===2) startGame2();
+  else startGame3();
+}
+
+// ──── LEADERBOARD ────
+function saveScore(gameName, score){
+  leaderboard.push({name:agentName, game:gameName, score, ts:Date.now()});
+  leaderboard.sort((a,b)=>b.score-a.score);
+  leaderboard = leaderboard.slice(0,20);
+  localStorage.setItem('transit_lb', JSON.stringify(leaderboard));
+}
+function updateLeaderboardUI(){
+  const el=document.getElementById('leaderboard-list');
+  if(!leaderboard.length) return;
+  const classes=['gold','silver','bronze'];
+  el.innerHTML = leaderboard.slice(0,5).map((e,i)=>`
+    <div class="lb-row">
+      <span class="lb-rank ${classes[i]||''}">${String(i+1).padStart(2,'0')}</span>
+      <span class="lb-name">${e.name} <span style="font-size:.75rem;color:var(--muted)">(${e.game})</span></span>
+      <span class="lb-score">${e.score}</span>
+    </div>`).join('');
+  const top = leaderboard[0]?.score || 0;
+  document.getElementById('top-score').textContent = top;
+  document.getElementById('total-players').textContent = new Set(leaderboard.map(e=>e.name)).size;
+}
+
+// ══════════════════════════════════════════════
+//  GAME 1 — SAST TRIVIA
+// ══════════════════════════════════════════════
+const SAST_QUESTIONS = [
+  {q:"¿Cuál es la sigla SAST y qué significa según la Ley 1843 de 2017?",opts:["Sistemas de Alerta y Señalización en Tránsito","Sistemas Automáticos, Semiautomáticos y otros medios Tecnológicos","Servicio de Asistencia y Supervisión del Tráfico","Sistemas de Auditoría y Seguridad del Tráfico"],correct:1,exp:"El Art. 2 de la Ley 1843 define SAST como Sistemas Automáticos, Semiautomáticos y otros medios Tecnológicos, instrumentos de recaudo probatorio estrictamente regulados."},
+  {q:"Según la Ley 1843 de 2017, ¿cuál es el rol exacto del SAST frente a la sanción?",opts:["Impone la sanción automáticamente al conductor","Solo recauda evidencia visual; NO impone la sanción automáticamente","Notifica directamente a la Secretaría de Tránsito","Cancela automáticamente la licencia de conducción"],correct:1,exp:"El SAST recauda la evidencia visual e identifica el vehículo, pero la sanción debe ser impuesta por la autoridad competente, no por la máquina."},
+  {q:"¿Cuántos años de datos históricos de accidentes exige la Resolución 718 para justificar la instalación de un SAST en una vía urbana?",opts:["1 año","2 años","3 años","5 años"],correct:2,exp:"La Resolución 718 exige análisis de siniestralidad en radio de 500 m (urbano) o 1500 m (nacional) durante los últimos 3 años."},
+  {q:"En vías nacionales, ¿cuál es la distancia exacta a la que debe colocarse la señal de advertencia del SAST?",opts:["200 metros","350 metros","500 metros","1000 metros"],correct:2,exp:"En vías nacionales la señalización debe ubicarse con antelación exacta de 500 metros y puede usarse señal fija SI-27 o Panel de Mensajería Variable (PMV)."},
+  {q:"¿Qué señal específica se usa en vías urbanas para advertir la presencia de un SAST con detección electrónica?",opts:["Señal SR-35 con panel rojo","Señal SI-27 con tablero inferior 'Detección Electrónica'","Señal preventiva SP-25","Señal SI-09 intermitente"],correct:1,exp:"En vías urbanas se usa señal fija SI-27 con el tablero inferior que indica 'Detección Electrónica'. La omisión anula el carácter preventivo exigido por la Ley 1843."},
+  {q:"¿Qué plataformas se consultan para verificar el historial de infracciones previo a instalar un SAST?",opts:["Solo SIMIT","Solo RUNT","SIMIT o RUNT","DNI o Policía Nacional"],correct:2,exp:"La Resolución 718 exige 2 años de datos históricos contrastados directamente con las plataformas SIMIT o RUNT."},
+  {q:"El criterio de 'Prevención' en la Resolución 718 prioriza la protección de actores vulnerables. ¿Cuáles son los tres tipos de zonas mencionados?",opts:["Parques, plazas y aeropuertos","Hospitales, colegios y ciclorrutas","Peajes, puentes y túneles","Zonas industriales, puertos y terminales"],correct:1,exp:"La Resolución 718 establece que el criterio de Prevención protege actores viales vulnerables en zonas de riesgo comprobado: hospitales, colegios y ciclorrutas."},
+  {q:"¿Cuál es el radio de análisis de siniestralidad para vías nacionales según la Resolución 718?",opts:["500 metros","750 metros","1000 metros","1500 metros"],correct:3,exp:"Para vías nacionales el radio es de 1500 m, mientras que en vías urbanas es de 500 m. Ambos requieren análisis de los últimos 3 años."},
+  {q:"¿Qué norma complementa el Art. 2 de la Ley 1843 en la definición técnica de los medios tecnológicos de detección?",opts:["Ley 105 de 1993","Art. 129, Ley 769 de 2002","Decreto 2106 de 2019","Resolución 1231 de 2020"],correct:1,exp:"El Art. 2 de la Ley 1843 de 2017 se complementa con el Art. 129 de la Ley 769 de 2002 (Código Nacional de Tránsito), que define las ayudas tecnológicas válidas como prueba."},
+  {q:"¿Qué criterio de la Resolución 718 exige un estudio de tránsito que demuestre mejora en los indicadores de flujo vehicular?",opts:["Siniestralidad","Prevención","Movilidad","Historial de Infracciones"],correct:2,exp:"El criterio de Movilidad exige un estudio de tránsito proyectado que demuestre una mejora en los indicadores de flujo vehicular."}
+];
+
+let g1Current = 0;
+let g1Score = 0;
+let g1Answered = false;
+let timerHandle = null;
+let timerVal = 15;
+
+function startGame1(){
+  document.getElementById('game1').classList.remove('hidden');
+  g1Current = 0; g1Score = 0;
+  document.getElementById('g1-score').textContent = 0;
+  showQuestion();
+}
+
+function showQuestion(){
+  if(g1Current >= SAST_QUESTIONS.length){ endGame(1, g1Score); return; }
+  g1Answered = false;
+  const q = SAST_QUESTIONS[g1Current];
+  document.getElementById('g1-qnum').textContent = `Pregunta ${g1Current+1} / ${SAST_QUESTIONS.length}`;
+  document.getElementById('g1-question').textContent = q.q;
+  document.getElementById('g1-progress').style.width = (g1Current/SAST_QUESTIONS.length*100)+'%';
+  const fb = document.getElementById('g1-feedback');
+  fb.classList.remove('show','feedback-correct','feedback-wrong');
+  fb.textContent='';
+  document.getElementById('g1-next').classList.add('hidden');
+  const opts = document.getElementById('g1-options');
+  opts.innerHTML = q.opts.map((o,i)=>`<button class="option-btn" onclick="answerQ1(${i})">${o}</button>`).join('');
+  startTimer('timer-circle','timer-num',15,()=>{if(!g1Answered) answerQ1(-1);});
+}
+
+function answerQ1(idx){
+  if(g1Answered) return;
+  g1Answered = true;
+  clearTimeout(timerHandle);
+  const q = SAST_QUESTIONS[g1Current];
+  const btns = document.querySelectorAll('#g1-options .option-btn');
+  btns.forEach(b=>b.disabled=true);
+  const fb = document.getElementById('g1-feedback');
+  if(idx === q.correct){
+    btns[idx].classList.add('correct');
+    const pts = Math.max(50, Math.floor(timerVal/15*150));
+    g1Score += pts;
+    document.getElementById('g1-score').textContent = g1Score;
+    fb.className='feedback-box show feedback-correct';
+    fb.innerHTML = `✅ ¡Correcto! +${pts} pts — ${q.exp}`;
+    playCorrect();
+  } else {
+    if(idx>=0) btns[idx].classList.add('wrong');
+    btns[q.correct].classList.add('correct');
+    fb.className='feedback-box show feedback-wrong';
+    fb.innerHTML = `❌ Respuesta incorrecta — ${q.exp}`;
+    playWrong();
+  }
+  g1Current++;
+  document.getElementById('g1-next').classList.remove('hidden');
+}
+function nextQuestion(){ playClick(); showQuestion(); }
+
+// ══════════════════════════════════════════════
+//  GAME 2 — SPEED SCENARIOS
+// ══════════════════════════════════════════════
+const SPEED_SCENARIOS = [
+  {scene:"🏫🚸",title:"Zona Escolar — Hora Pico",desc:"Es hora de entrada escolar. Niños cruzando la calle frente a un colegio público. Vía urbana de dos carriles.",opts:[20,30,50,60],correct:1,exp:"En zonas escolares el límite es 30 km/h. La velocidad adecuada considera la presencia de actores vulnerables (niños) y el entorno urbano."},
+  {scene:"🛣️☀️",title:"Autopista Nacional — Condiciones Óptimas",desc:"Vía nacional de doble calzada, cielo despejado, pavimento seco, sin obras. El flujo vehicular es moderado.",opts:[60,80,100,120],correct:3,exp:"En condiciones óptimas en autopistas nacionales el límite puede ser 120 km/h. Sin embargo, siempre debe adaptarse a las condiciones reales."},
+  {scene:"🌧️🏙️",title:"Vía Urbana — Lluvia Intensa",desc:"Aguacero fuerte en zona urbana. Visibilidad reducida, pavimento mojado. El conductor ve peatones con paraguas.",opts:[20,30,40,60],correct:1,exp:"Con lluvia intensa en vía urbana, aunque el límite sea 50 km/h, la velocidad adecuada desciende a 30 km/h o menos. El factor clima exige reducir velocidad."},
+  {scene:"🌉🌫️",title:"Puente — Niebla Densa",desc:"Cruzando un puente con niebla densa. Visibilidad menor a 50 metros. Vía nacional secundaria.",opts:[15,30,50,80],correct:0,exp:"Con visibilidad menor a 50 metros por niebla, la velocidad debe ser máximo 15 km/h. El factor clima (visibilidad reducida) es crítico para la velocidad adecuada."},
+  {scene:"🏥🚑",title:"Frente a Hospital — Zona Restringida",desc:"Vía urbana frente a un hospital de alta complejidad. Ambulancias entrando y saliendo. Peatones en silla de ruedas.",opts:[20,30,50,60],correct:0,exp:"Frente a hospitales aplica zona de actores vulnerables. La velocidad máxima recomendada es 20 km/h para garantizar la seguridad de pacientes y personal médico."},
+  {scene:"🚲🛤️",title:"Cicloruta — Zona de Interacción",desc:"Vía compartida donde una cicloruta cruza perpendicularmente. Hora de almuerzo, muchos ciclistas.",opts:[10,20,30,50],correct:1,exp:"En zonas de cruce con ciclorutas la velocidad máxima es 20 km/h. Los ciclistas son actores viales vulnerables protegidos por la Resolución 718."},
+  {scene:"🏘️🌃",title:"Zona Residencial — Noche",desc:"Vía residencial con iluminación deficiente. Noche. Posible presencia de peatones que no se ven bien.",opts:[20,30,50,60],correct:0,exp:"En zonas residenciales con baja visibilidad nocturna se recomienda máximo 20 km/h. La interacción con peatones no visibles aumenta significativamente el riesgo."},
+  {scene:"🏗️⚠️",title:"Zona de Obras — Señalización Temporal",desc:"Paso por obra de construcción. Un carril bloqueado, obreros trabajando al borde de la vía. Señales temporales amarillas.",opts:[10,30,50,80],correct:1,exp:"En zonas de obras con personal en la calzada, el límite es 30 km/h. La presencia de obreros como actores vulnerables y la reducción de carriles lo exigen."}
+];
+
+let g2Current = 0;
+let g2Score = 0;
+let g2Answered = false;
+
+function startGame2(){
+  document.getElementById('game2').classList.remove('hidden');
+  g2Current = 0; g2Score = 0;
+  document.getElementById('g2-score').textContent = 0;
+  showScenario();
+}
+
+function showScenario(){
+  if(g2Current >= SPEED_SCENARIOS.length){ endGame(2, g2Score); return; }
+  g2Answered = false;
+  const s = SPEED_SCENARIOS[g2Current];
+  document.getElementById('g2-scene').textContent = s.scene;
+  document.getElementById('g2-stitle').textContent = s.title;
+  document.getElementById('g2-sdesc').textContent = s.desc;
+  document.getElementById('g2-progress').style.width = (g2Current/SPEED_SCENARIOS.length*100)+'%';
+  const fb = document.getElementById('g2-feedback');
+  fb.classList.remove('show','feedback-correct','feedback-wrong'); fb.textContent='';
+  document.getElementById('g2-next').classList.add('hidden');
+  const opts = document.getElementById('g2-options');
+  opts.innerHTML = s.opts.map((o,i)=>`
+    <button class="speed-btn" onclick="answerSpeed(${i})">
+      <span class="speed-val">${o}</span>
+      <span class="speed-unit">km/h</span>
+    </button>`).join('');
+  startTimer('timer-circle2','timer-num2',20,()=>{if(!g2Answered) answerSpeed(-1);});
+}
+
+function answerSpeed(idx){
+  if(g2Answered) return;
+  g2Answered = true;
+  clearTimeout(timerHandle);
+  const s = SPEED_SCENARIOS[g2Current];
+  const btns = document.querySelectorAll('#g2-options .speed-btn');
+  btns.forEach(b=>b.disabled=true);
+  const fb = document.getElementById('g2-feedback');
+  if(idx === s.correct){
+    btns[idx].classList.add('correct');
+    const pts = Math.max(60, Math.floor(timerVal/20*200));
+    g2Score += pts;
+    document.getElementById('g2-score').textContent = g2Score;
+    fb.className='feedback-box show feedback-correct';
+    fb.innerHTML = `✅ ¡Velocidad correcta! +${pts} pts — ${s.exp}`;
+    playCorrect();
+  } else {
+    if(idx>=0) btns[idx].classList.add('wrong');
+    btns[s.correct].classList.add('correct');
+    fb.className='feedback-box show feedback-wrong';
+    fb.innerHTML = `❌ Velocidad incorrecta. La respuesta correcta es ${s.opts[s.correct]} km/h — ${s.exp}`;
+    playWrong();
+  }
+  g2Current++;
+  document.getElementById('g2-next').classList.remove('hidden');
+}
+function nextSpeed(){ playClick(); showScenario(); }
+
+// ══════════════════════════════════════════════
+//  GAME 3 — CALE CLASSIFIER
+// ══════════════════════════════════════════════
+const VEHICLES = [
+  {id:'moto',icon:'🏍️',name:'Motocicleta',cat:'Categoría A1/A2',class:1},
+  {id:'carro',icon:'🚗',name:'Automóvil Particular',cat:'Categoría B1',class:1},
+  {id:'taxi',icon:'🚕',name:'Taxi / Colectivo',cat:'Categoría C1',class:1},
+  {id:'bus',icon:'🚌',name:'Bus Intermunicipal',cat:'Categoría B2',class:2},
+  {id:'camioneta',icon:'🚐',name:'Camioneta/Van Carga',cat:'Categoría C2',class:2},
+  {id:'camion',icon:'🚚',name:'Camión Sencillo',cat:'Categoría B3',class:3},
+  {id:'tractocamion',icon:'🚛',name:'Tractocamión',cat:'Categoría C3',class:3},
+];
+const CALE_CLASSES = [
+  {num:1,label:'Clase I',badge:'clase1',desc:'Motos y Vehículos Ligeros (A1, A2, B1, C1)',vehicles:[]},
+  {num:2,label:'Clase II',badge:'clase2',desc:'Clase I + Medianos (B2, C2)',vehicles:[]},
+  {num:3,label:'Clase III',badge:'clase3',desc:'Clases I y II + Pesados (B3, C3)',vehicles:[]},
+];
+let placedVehicles = {}; // id → classNum
+let draggedId = null;
+
+function startGame3(){
+  document.getElementById('game3').classList.remove('hidden');
+  document.getElementById('g3-score').textContent = 0;
+  placedVehicles = {};
+  renderCaleBoard();
+}
+
+function renderCaleBoard(){
+  // Pool
+  const pool = document.getElementById('vehicles-pool');
+  pool.innerHTML = VEHICLES.map(v=>`
+    <div class="vehicle-chip ${placedVehicles[v.id]?'placed':''}" id="chip-${v.id}" draggable="true"
+      ondragstart="dragStart('${v.id}')" ontouchstart="touchStart(event,'${v.id}')">
+      <span class="vicon">${v.icon}</span>
+      <div class="vinfo"><div class="vname">${v.name}</div><div class="vcat">${v.cat}</div></div>
+    </div>`).join('');
+  // Classes
+  const classes = document.getElementById('cale-classes');
+  classes.innerHTML = CALE_CLASSES.map(c=>`
+    <div class="cale-drop-zone" id="zone-${c.num}" ondragover="dragOver(event)" ondrop="drop(event,${c.num})"
+      ontouchend="touchDrop(event,${c.num})">
+      <div class="zone-header">
+        <span class="zone-badge ${c.badge}">${c.label}</span>
+        <span class="zone-desc">${c.desc}</span>
+      </div>
+      <div class="zone-vehicles" id="zone-chips-${c.num}">
+        ${Object.entries(placedVehicles).filter(([k,v])=>v===c.num).map(([k])=>{
+          const veh=VEHICLES.find(v=>v.id===k);
+          return `<div class="zone-chip" onclick="removeFromZone('${k}')" title="Click para quitar">${veh.icon} ${veh.name}</div>`;
+        }).join('') || '<span class="drop-hint">Arrastra vehículos aquí</span>'}
+      </div>
+    </div>`).join('');
+  const fb = document.getElementById('g3-feedback');
+  fb.classList.remove('show');
+}
+
+function dragStart(id){ draggedId = id; }
+function dragOver(e){ e.preventDefault(); }
+function drop(e, classNum){ e.preventDefault(); if(draggedId) placeVehicle(draggedId, classNum); draggedId=null; }
+
+let touchVehicleId = null;
+function touchStart(e, id){ touchVehicleId = id; }
+function touchDrop(e, classNum){ if(touchVehicleId){ placeVehicle(touchVehicleId, classNum); touchVehicleId=null; } }
+
+function placeVehicle(id, classNum){
+  playClick();
+  placedVehicles[id] = classNum;
+  renderCaleBoard();
+}
+function removeFromZone(id){
+  playClick();
+  delete placedVehicles[id];
+  renderCaleBoard();
+}
+function resetCale(){ playClick(); placedVehicles={}; renderCaleBoard(); document.getElementById('g3-feedback').classList.remove('show'); }
+
+function checkCale(){
+  const total = VEHICLES.length;
+  let correct = 0;
+  const wrong = [];
+  VEHICLES.forEach(v=>{
+    const placed = placedVehicles[v.id];
+    if(placed===v.class) correct++;
+    else if(placed) wrong.push({v, placed});
+  });
+  const unplaced = VEHICLES.filter(v=>!placedVehicles[v.id]);
+  const score = Math.round(correct/total*1000);
+  document.getElementById('g3-score').textContent = score;
+  const fb = document.getElementById('g3-feedback');
+  if(correct===total){
+    fb.className='feedback-box show feedback-correct';
+    fb.innerHTML=`🏆 ¡Clasificación perfecta! ${correct}/${total} vehículos correctos. Puntaje: ${score} pts`;
+    launchConfetti();
+    playCorrect();
+    setTimeout(()=>endGame(3, score), 2500);
+  } else {
+    fb.className='feedback-box show feedback-wrong';
+    const wrongText = wrong.map(({v,placed})=>`${v.icon} ${v.name} → pusiste Clase ${placed} pero es Clase ${v.class}`).join('; ');
+    const unplacedText = unplaced.map(v=>v.name).join(', ');
+    fb.innerHTML=`⚠️ ${correct}/${total} correctos. ${wrongText}${unplacedText?'. Sin clasificar: '+unplacedText:''}.`;
+    playWrong();
+    if(correct>=5){ setTimeout(()=>endGame(3, score), 3000); }
+  }
+  // Highlight zones
+  VEHICLES.forEach(v=>{
+    const zone = document.getElementById(`zone-${v.class}`);
+    if(zone){ zone.classList.toggle('correct-drop', placedVehicles[v.id]===v.class); }
+  });
+  // Request AI explanation
+  fetchAIExplanation(correct, total, wrong);
+}
+
+async function fetchAIExplanation(correct, total, wrong){
+  const el = document.getElementById('g3-ai-explanation');
+  if(!el) return;
+  el.innerHTML=`<div class="card"><div class="ai-loading"><span></span><span></span><span></span></div> <span style="margin-left:10px;font-size:.85rem;color:var(--muted)">IA analizando tu clasificación...</span></div>`;
+  try{
+    const wrongDesc = wrong.map(({v,placed})=>`${v.name} (pusiste Clase ${placed}, correcto Clase ${v.class})`).join(', ');
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:'Eres un instructor experto en normativa vial colombiana. Responde en español colombiano, de forma pedagógica y motivadora. Sé conciso (máximo 3 párrafos cortos).',
+        messages:[{role:'user',content:`Un agente de tránsito acaba de clasificar vehículos según el sistema CALE (Resolución 20253040037125). Acertó ${correct} de ${total}. ${wrong.length>0?'Errores: '+wrongDesc:'¡Todo perfecto!'} La clasificación CALE es: Clase I = Motos y Ligeros (A1,A2,B1,C1); Clase II = Clase I + Medianos (B2,C2); Clase III = Todo incluyendo Pesados (B3,C3). Cada clase superior incluye automáticamente las clases inferiores. Explica brevemente por qué la clasificación es así, refuerza los errores si los hay, y motiva al agente.`}]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || 'Análisis no disponible.';
+    el.innerHTML=`<div class="card" style="border-color:rgba(124,92,191,.3)"><h4 style="color:#a78bfa;margin-bottom:10px">🤖 Análisis de IA</h4><p style="font-size:.9rem;line-height:1.7;color:rgba(240,246,255,.8)">${text}</p></div>`;
+  }catch(e){el.innerHTML='';}
+}
+
+// ══════════════════════════════════════════════
+//  TIMER
+// ══════════════════════════════════════════════
+let timerInterval = null;
+function startTimer(circleId, numId, seconds, onEnd){
+  clearInterval(timerInterval);
+  timerVal = seconds;
+  const circle = document.getElementById(circleId);
+  const numEl = document.getElementById(numId);
+  const circumference = 150.8;
+  function update(){
+    const pct = timerVal/seconds;
+    circle.style.strokeDashoffset = circumference*(1-pct);
+    circle.style.stroke = pct>.5?'var(--teal)':pct>.25?'var(--gold)':'var(--coral)';
+    numEl.textContent = timerVal;
+    numEl.style.color = pct>.25?'var(--white)':'var(--coral)';
+  }
+  update();
+  timerInterval = setInterval(()=>{
+    timerVal--;
+    update();
+    if(timerVal<=0){ clearInterval(timerInterval); onEnd(); }
+  },1000);
+}
+
+// ══════════════════════════════════════════════
+//  RESULT SCREEN
+// ══════════════════════════════════════════════
+async function endGame(gameNum, score){
+  clearInterval(timerInterval);
+  ['game1','game2','game3'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  const screen = document.getElementById('result-screen');
+  screen.classList.remove('hidden');
+  scores[gameNum] = score;
+  const gameNames = {1:'SAST Detector',2:'Velocímetro',3:'CALE Classifier'};
+  const gameName = gameNames[gameNum];
+  saveScore(gameName, score);
+  updateLeaderboardUI();
+  document.getElementById('result-game-name').textContent = gameName;
+  document.getElementById('result-score').textContent = score + ' pts';
+  const maxScore = {1:1500,2:1600,3:1000}[gameNum];
+  const pct = score/maxScore;
+  let trophy, grade;
+  if(pct>=.9){trophy='🏆';grade='¡MAESTRO DE TRÁNSITO! Puntaje excepcional. Conocimiento experto certificado.';}
+  else if(pct>=.75){trophy='🥇';grade='¡Excelente! Dominas la normativa vial colombiana.';}
+  else if(pct>=.55){trophy='🥈';grade='Bien hecho. Unos pocos conceptos por reforzar.';}
+  else{trophy='📚';grade='Sigue practicando. Repasa los materiales y vuelve a intentarlo.';}
+  document.getElementById('result-trophy').textContent = trophy;
+  document.getElementById('result-grade').textContent = grade;
+  if(pct>=.75) launchConfetti();
+  const code = btoa(`${agentName}|${gameName}|${score}|${new Date().toLocaleDateString('es-CO')}`).slice(0,12).toUpperCase();
+  document.getElementById('share-code').textContent = code;
+  document.getElementById('play-again-btn').onclick = ()=>{ playClick(); launchGame(gameNum); screen.classList.add('hidden'); };
+  // AI analysis
+  const analysisEl = document.getElementById('result-ai-analysis');
+  try{
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:'Eres un instructor de tránsito colombiano. Responde en español. Máximo 3 oraciones por sección.',
+        messages:[{role:'user',content:`El agente ${agentName} completó el juego "${gameName}" con ${score} puntos de máximo ${maxScore} (${Math.round(pct*100)}%). Genera un análisis pedagógico breve: 1) Qué hizo bien, 2) Qué debe repasar, 3) Una frase motivadora citando la ley o norma relevante del juego.`}]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || '';
+    analysisEl.innerHTML = text.replace(/\n/g,'<br>');
+  }catch(e){analysisEl.textContent='Sigue practicando para dominar la normativa vial colombiana.';}
+}
+
+function copyCode(){
+  const code = document.getElementById('share-code').textContent;
+  navigator.clipboard?.writeText(code).then(()=>{
+    document.getElementById('share-code').textContent='¡Copiado!';
+    setTimeout(()=>document.getElementById('share-code').textContent=code,1500);
+  });
+}
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+window.onload = ()=>{
+  updateLeaderboardUI();
+  // Quick start if name already in storage
+  const savedName = localStorage.getItem('transit_agent');
+  if(savedName){ document.getElementById('agent-name').value = savedName; }
+};
+</script>
+</body>
+</html>
